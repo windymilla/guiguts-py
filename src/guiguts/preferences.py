@@ -82,6 +82,11 @@ class PrefKey(StrEnum):
     SCANNOS_FILENAME = auto()
     SCANNOS_HISTORY = auto()
     HIGHLIGHT_QUOTBRAC = auto()
+    HTML_ITALIC_MARKUP = auto()
+    HTML_BOLD_MARKUP = auto()
+    HTML_GESPERRT_MARKUP = auto()
+    HTML_FONT_MARKUP = auto()
+    HTML_UNDERLINE_MARKUP = auto()
 
 
 class Preferences:

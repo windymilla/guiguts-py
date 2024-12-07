@@ -16,7 +16,7 @@ from guiguts.checkers import CheckerSortType
 from guiguts.data import themes
 from guiguts.file import File, the_file, NUM_RECENT_FILES
 from guiguts.footnotes import footnote_check
-from guiguts.html_convert import HTMLGeneratorDialog
+from guiguts.html_convert import HTMLGeneratorDialog, HTMLMarkupTypes
 from guiguts.illo_sn_fixup import illosn_check
 from guiguts.maintext import maintext
 from guiguts.mainwindow import (
@@ -420,6 +420,13 @@ Fifth Floor, Boston, MA 02110-1301 USA."""
         preferences.set_default(PrefKey.HIGHLIGHT_QUOTBRAC, False)
         preferences.set_callback(
             PrefKey.HIGHLIGHT_QUOTBRAC, self.highlight_quotbrac_callback
+        )
+        preferences.set_default(PrefKey.HTML_ITALIC_MARKUP, HTMLMarkupTypes.KEEP)
+        preferences.set_default(PrefKey.HTML_BOLD_MARKUP, HTMLMarkupTypes.KEEP)
+        preferences.set_default(PrefKey.HTML_GESPERRT_MARKUP, HTMLMarkupTypes.EM_CLASS)
+        preferences.set_default(PrefKey.HTML_FONT_MARKUP, HTMLMarkupTypes.SPAN_CLASS)
+        preferences.set_default(
+            PrefKey.HTML_UNDERLINE_MARKUP, HTMLMarkupTypes.SPAN_CLASS
         )
 
         # Check all preferences have a default
