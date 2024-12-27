@@ -73,20 +73,24 @@ class BookloupeChecker:
             step = next_step
             next_step += 1
             line = maintext().get(f"{step}.0", f"{step}.end")
-            # Remove block markup, so it becomes a blank line
+            # If line is block markup or all asterisks or all hyphens, replace with blank line
             line = self.remove_block_markup(line)
             # Are we starting a new paragraph?
             if line and not in_para:
                 para_first_step = step
                 in_para = True
-            # Deal with blank line (or end of file)
-            if not line or step >= step_end:
+            # Deal with blank line
+            if not line:
                 # If paragraph has just ended, check quotes, etc. & ending punctuation
                 if in_para:
-                    para_end = step if step >= step_end else step - 1
-                    self.check_para(para_first_step, para_end)
+                    self.check_para(para_first_step, step - 1)
                     in_para = False
                 continue
+            # Normal line
+            self.check_odd_characters(step, line)
+        # End of file - check the final para
+        if in_para:
+            self.check_para(para_first_step, step)
 
     def check_para(self, para_start: int, para_end: int) -> None:
         """Check quotes & brackets are paired within given paragraph.
@@ -168,10 +172,30 @@ class BookloupeChecker:
                 IndexRange(maintext().rowcol(f"{end_index}-1c"), end_index),
             )
 
+    def check_odd_characters(self, step: int, line: str) -> None:
+        """Check for tabs, tildes, etc."""
+        assert self.dialog is not None
+        odd_char_names = {
+            "\t": "Tab character?",
+            "~": "Tilde character?",
+            "^": "Carat character?",
+            "/": "Forward slash?",
+            "*": "Asterisk",
+        }
+        for idx, ltr in enumerate(line):
+            if ltr in odd_char_names:
+                self.dialog.add_entry(
+                    odd_char_names[ltr],
+                    IndexRange(f"{step}.{idx}", f"{step}.{idx+1}"),
+                )
+
     def remove_block_markup(self, string: str) -> str:
-        """Remove all types of DP block markup from given string."""
+        """Clear lines that contain all types of DP block markup or thought breaks.
+
+        Thought breaks are `<tb>` or consist only of asterisks or hyphens (and spaces).
+        """
         return re.sub(
-            r"^(/([\$xf\*plrci])(\[\d+)?(\.\d+)?(,\d+)?]?|[\$xf\*plrci]/|<tb>) *$",
+            r"^(/([\$xf\*plrci])(\[\d+)?(\.\d+)?(,\d+)?]?|[\$xf\*plrci]/|<tb>|[* ]+|[- ]+) *$",
             "",
             string,
             flags=re.IGNORECASE,
