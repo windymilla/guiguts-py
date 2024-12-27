@@ -153,6 +153,16 @@ class BookloupeChecker:
                 "Mismatched curly brackets?",
                 para_range,
             )
+        # Does paragraph begin with a lowercase letter?
+        if match := re.match(r"[ \P{IsAlnum}]*\p{Lowercase_Letter}", para_text):
+            match_len = len(match[0])
+            self.dialog.add_entry(
+                "Paragraph starts with lower-case",
+                IndexRange(
+                    maintext().rowcol(f"{start_index}+{match_len-1}c"),
+                    maintext().rowcol(f"{start_index}+{match_len}c"),
+                ),
+            )
         # Does paragraph end with suitable punctuation
         # Ignore single line paragraphs & those without any lowercase letters,
         # in order to avoid false positives from chapter headings, etc.
