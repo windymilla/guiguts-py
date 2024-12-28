@@ -88,6 +88,7 @@ class BookloupeChecker:
                 continue
             # Normal line
             self.check_odd_characters(step, line)
+            self.check_hyphens(step, line)
         # End of file - check the final para
         if in_para:
             self.check_para(para_first_step, step)
@@ -183,7 +184,12 @@ class BookloupeChecker:
             )
 
     def check_odd_characters(self, step: int, line: str) -> None:
-        """Check for tabs, tildes, etc."""
+        """Check for tabs, tildes, etc.
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
         assert self.dialog is not None
         odd_char_names = {
             "\t": "Tab character?",
@@ -199,20 +205,79 @@ class BookloupeChecker:
                     IndexRange(f"{step}.{idx}", f"{step}.{idx+1}"),
                 )
 
-    def remove_block_markup(self, string: str) -> str:
+    def check_hyphens(self, step: int, line: str) -> None:
+        """Check for leading/trailing hyphens, etc.
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
+        assert self.dialog is not None
+        # Single (not double) hyphen at end of line
+        if len(line) > 1 and line[-1] == "-" and line[-2] != "-":
+            # If next line starts with hyphen, broken emdash?
+            if maintext().get(f"{step+1}.0") == "-":
+                self.dialog.add_entry(
+                    "Broken em-dash?",
+                    IndexRange(maintext().rowcol(f"{step}.end-1c"), f"{step+1}.1"),
+                )
+            # Otherwise query end of line hyphen
+            else:
+                self.dialog.add_entry(
+                    "Hyphen at end of line?",
+                    IndexRange(
+                        maintext().rowcol(f"{step}.end-1c"),
+                        maintext().rowcol(f"{step}.end"),
+                    ),
+                )
+        # Spaced emdash (4 hyphens represents a word, so is allowed to be spaced)
+        for match in re.finditer(" -- |(?<!--)-- | --(?!--)", line):
+            self.add_match_entry(step, match, "Spaced em-dash?")
+        # Spaced single hyphen/dash (don't report emdashes again)
+        for match in re.finditer(" - |(?<!-)- | -(?!-)", line):
+            self.add_match_entry(step, match, "Spaced dash?")
+
+    def add_match_entry(self, step: int, match: re.Match, message: str) -> None:
+        """Add message about given match to dialog.
+
+        Args:
+            step: Line number being checked.
+            match: Match for error on line.
+            message: Text for error message.
+        """
+        assert self.dialog is not None
+        self.dialog.add_entry(
+            message,
+            IndexRange(f"{step}.{match.start()}", f"{step}.{match.end()}"),
+        )
+
+    def remove_block_markup(self, line: str) -> str:
         """Clear lines that contain all types of DP block markup or thought breaks.
 
         Thought breaks are `<tb>` or consist only of asterisks or hyphens (and spaces).
+
+        Args:
+            line: Text of line being checked.
+
+        Returns:
+            Line with block markup and thought breaks removed.
         """
         return re.sub(
             r"^(/([\$xf\*plrci])(\[\d+)?(\.\d+)?(,\d+)?]?|[\$xf\*plrci]/|<tb>|[* ]+|[- ]+) *$",
             "",
-            string,
+            line,
             flags=re.IGNORECASE,
         )
 
     def remove_inline_markup(self, string: str) -> str:
-        """Remove all types of DP inline markup from given string."""
+        """Remove all types of DP inline markup from given string.
+
+        Args:
+            line: Text to be checked.
+
+        Returns:
+            String with DP inline markup  removed.
+        """
         return re.sub(r"</?([ibfg]|sc)>", "", string)
 
 
