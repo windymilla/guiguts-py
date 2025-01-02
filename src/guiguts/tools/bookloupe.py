@@ -99,6 +99,8 @@ class BookloupeChecker:
             self.check_odd_characters(step, line)
             self.check_hyphens(step, line)
             self.check_line_length(step, line)
+            self.check_starting_punctuation(step, line)
+            self.check_missing_para_break(step, line)
             # Add line to paragraph
             paragraph += "\n" + line
         # End of file - check the final para
@@ -297,6 +299,35 @@ class BookloupeChecker:
             f"Short line {line_len}?",
             IndexRange(f"{step}.0", f"{step}.{line_len + 1}"),
         )
+
+    def check_starting_punctuation(self, step: int, line: str) -> None:
+        """Check for bad punctuation at start of line
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
+        assert self.dialog is not None
+        if re.match(r"[?!,;:]|\.(?!( \. \.|\.\.))", line):
+            self.dialog.add_entry(
+                "Begins with punctuation?",
+                IndexRange(f"{step}.0", f"{step}.1"),
+            )
+
+    def check_missing_para_break(self, step: int, line: str) -> None:
+        """Check for missing paragraph break between quotes - straight doubles only.
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
+        assert self.dialog is not None
+        if match := re.search(r'"  ?"', line):
+            self.add_match_entry(
+                step,
+                match,
+                "Query missing paragraph break?",
+            )
 
     def add_match_entry(self, step: int, match: re.Match, message: str) -> None:
         """Add message about given match to dialog.
