@@ -19,19 +19,25 @@ logger = logging.getLogger(__package__)
 _the_bookloupe_checker = None  # pylint: disable=invalid-name
 
 
+class BookloupeCheckerDialog(CheckerDialog):
+    """Minimal class to identify dialog type."""
+
+    manual_page = "Tools_Menu#Bookloupe"
+
+
 class BookloupeChecker:
     """Provides bookloupe check functionality."""
 
     def __init__(self) -> None:
         """Initialize BookloupeChecker class."""
         self.dictionary: dict[str, int] = {}
-        self.dialog: Optional[CheckerDialog] = None
+        self.dialog: Optional[BookloupeCheckerDialog] = None
 
     def check_file(self) -> None:
         """Check for bookloupe errors in the currently loaded file."""
 
         # Create the checker dialog to show results
-        self.dialog = CheckerDialog.show_dialog(
+        self.dialog = BookloupeCheckerDialog.show_dialog(
             "Bookloupe Results",
             rerun_command=bookloupe_check,
             process_command=self.process_bookloupe,
@@ -54,8 +60,10 @@ class BookloupeChecker:
         """Process the Bookloupe query."""
         if checker_entry.text_range is None:
             return
-        start_mark = CheckerDialog.mark_from_rowcol(checker_entry.text_range.start)
-        end_mark = CheckerDialog.mark_from_rowcol(checker_entry.text_range.end)
+        start_mark = BookloupeCheckerDialog.mark_from_rowcol(
+            checker_entry.text_range.start
+        )
+        end_mark = BookloupeCheckerDialog.mark_from_rowcol(checker_entry.text_range.end)
         replacement_text = "FIXED"
         maintext().replace(start_mark, end_mark, replacement_text)
 
@@ -67,33 +75,37 @@ class BookloupeChecker:
         """
         next_step = 1
         para_first_step = 1
-        in_para = False
+        paragraph = ""  # Store up paragraph for those checks that need whole para
         step_end = maintext().end().row
         while next_step <= step_end:
             step = next_step
             next_step += 1
             line = maintext().get(f"{step}.0", f"{step}.end")
-            # If line is block markup or all asterisks or all hyphens, replace with blank line
-            line = self.remove_block_markup(line)
+            # If line is block markup or all asterisks/hyphens or page separator, skip
+            if self.is_skippable_line(line):
+                continue
             # Are we starting a new paragraph?
-            if line and not in_para:
+            if line and not paragraph:
                 para_first_step = step
-                in_para = True
+                paragraph = line
             # Deal with blank line
             if not line:
                 # If paragraph has just ended, check quotes, etc. & ending punctuation
-                if in_para:
-                    self.check_para(para_first_step, step - 1)
-                    in_para = False
+                if paragraph:
+                    self.check_para(para_first_step, step - 1, paragraph)
+                    paragraph = ""
                 continue
             # Normal line
             self.check_odd_characters(step, line)
             self.check_hyphens(step, line)
+            self.check_line_length(step, line)
+            # Add line to paragraph
+            paragraph += "\n" + line
         # End of file - check the final para
-        if in_para:
-            self.check_para(para_first_step, step)
+        if paragraph:
+            self.check_para(para_first_step, step, paragraph)
 
-    def check_para(self, para_start: int, para_end: int) -> None:
+    def check_para(self, para_start: int, para_end: int, para_text: str) -> None:
         """Check quotes & brackets are paired within given paragraph.
         Also that paragaph ends with suitable punctuation.
 
@@ -103,12 +115,12 @@ class BookloupeChecker:
         Args:
             para_start: First line number of paragraph.
             para_end: Last line number of paragraph.
+            para_text: Text of paragraph.
         """
         assert self.dialog is not None
         start_index = f"{para_start}.0"
         end_index = maintext().index(f"{para_end}.end")
         para_range = IndexRange(start_index, end_index)
-        para_text = maintext().get(start_index, end_index)
         # Straight double quotes - an odd number means a potential error unless
         # the next paragraph starts with a double quote
         if para_text.count('"') % 2 and maintext().get(f"{para_end}.0+2l") != '"':
@@ -160,7 +172,7 @@ class BookloupeChecker:
             self.dialog.add_entry(
                 "Paragraph starts with lower-case",
                 IndexRange(
-                    maintext().rowcol(f"{start_index}+{match_len-1}c"),
+                    maintext().rowcol(f"{start_index}+{match_len - 1}c"),
                     maintext().rowcol(f"{start_index}+{match_len}c"),
                 ),
             )
@@ -202,7 +214,7 @@ class BookloupeChecker:
             if ltr in odd_char_names:
                 self.dialog.add_entry(
                     odd_char_names[ltr],
-                    IndexRange(f"{step}.{idx}", f"{step}.{idx+1}"),
+                    IndexRange(f"{step}.{idx}", f"{step}.{idx + 1}"),
                 )
 
     def check_hyphens(self, step: int, line: str) -> None:
@@ -216,10 +228,10 @@ class BookloupeChecker:
         # Single (not double) hyphen at end of line
         if len(line) > 1 and line[-1] == "-" and line[-2] != "-":
             # If next line starts with hyphen, broken emdash?
-            if maintext().get(f"{step+1}.0") == "-":
+            if maintext().get(f"{step + 1}.0") == "-":
                 self.dialog.add_entry(
                     "Broken em-dash?",
-                    IndexRange(maintext().rowcol(f"{step}.end-1c"), f"{step+1}.1"),
+                    IndexRange(maintext().rowcol(f"{step}.end-1c"), f"{step + 1}.1"),
                 )
             # Otherwise query end of line hyphen
             else:
@@ -237,6 +249,55 @@ class BookloupeChecker:
         for match in re.finditer(" - |(?<!-)- | -(?!-)", line):
             self.add_match_entry(step, match, "Spaced dash?")
 
+    def check_line_length(self, step: int, line: str) -> None:
+        """Check for long or short lines.
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+            para_text: Text of paragraph up to this point,
+        """
+        assert self.dialog is not None
+        longest_pg_line = 75
+        shortest_pg_line = 55
+        line_len = len(line)
+        if line_len > longest_pg_line:
+            self.dialog.add_entry(
+                f"Long line {line_len}",
+                IndexRange(f"{step}.{longest_pg_line}", f"{step}.{line_len + 1}"),
+            )
+            return
+        # Short lines are not reported if they are not short!
+        if line_len >= shortest_pg_line:
+            return
+        # Nor if they are indented (e.g. poetry)
+        if line_len > 0 and line[0] == " ":
+            return
+        # Nor if they are the last line of a paragraph (allowed to be short)
+        # Look backwards to find first non-skippable line & check if it's blank
+        end_step = maintext().end().row
+        for check_step in range(step + 1, end_step + 1):
+            check_line = maintext().get(f"{check_step}.0", f"{check_step}.end")
+            if not self.is_skippable_line(check_line):
+                if len(check_line) == 0:
+                    return
+                break
+        # Nor if the previous line was a short line (may be short-lined para, such as letter header)
+        # Look backwards to find first non-skippable line & check its length
+        for check_step in range(step - 1, 0, -1):
+            check_line = maintext().get(f"{check_step}.0", f"{check_step}.end")
+            if not self.is_skippable_line(check_line):
+                if (
+                    len(check_line) <= shortest_pg_line
+                ):  # <= rather than < for backward compatibility
+                    return
+                break
+        # None of the situations above happened, so it's a suspect short line
+        self.dialog.add_entry(
+            f"Short line {line_len}?",
+            IndexRange(f"{step}.0", f"{step}.{line_len + 1}"),
+        )
+
     def add_match_entry(self, step: int, match: re.Match, message: str) -> None:
         """Add message about given match to dialog.
 
@@ -251,22 +312,24 @@ class BookloupeChecker:
             IndexRange(f"{step}.{match.start()}", f"{step}.{match.end()}"),
         )
 
-    def remove_block_markup(self, line: str) -> str:
-        """Clear lines that contain all types of DP block markup or thought breaks.
+    def is_skippable_line(self, line: str) -> bool:
+        """Return whether line should be skipped.
 
-        Thought breaks are `<tb>` or consist only of asterisks or hyphens (and spaces).
+        Lines that contain DP block markup, page separators or thought breaks
+        (`<tb>` or only asterisks/hyphens and spaces).
 
         Args:
             line: Text of line being checked.
 
         Returns:
-            Line with block markup and thought breaks removed.
+            True if line should be skipped.
         """
-        return re.sub(
-            r"^(/([\$xf\*plrci])(\[\d+)?(\.\d+)?(,\d+)?]?|[\$xf\*plrci]/|<tb>|[* ]+|[- ]+) *$",
-            "",
-            line,
-            flags=re.IGNORECASE,
+        return bool(
+            re.fullmatch(
+                r"(/[\$xf\*plrci](\[\d+)?(\.\d+)?(,\d+)?]?|[\$xf\*plrci]/|<tb>|[* ]+|[- ]+|-----File:.+) *",
+                line,
+                flags=re.IGNORECASE,
+            )
         )
 
     def remove_inline_markup(self, string: str) -> str:
