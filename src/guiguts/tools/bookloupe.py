@@ -7,11 +7,12 @@ from typing import Optional
 
 import logging
 import regex as re
+import roman  # type: ignore[import-untyped]
 
 from guiguts.checkers import CheckerDialog, CheckerEntry
 from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
-from guiguts.utilities import IndexRange
+from guiguts.utilities import IndexRange, DiacriticRemover
 from guiguts.widgets import ToolTip
 
 logger = logging.getLogger(__package__)
@@ -109,6 +110,9 @@ class BookloupeChecker:
             self.check_starting_punctuation(step, line)
             self.check_missing_para_break(step, line)
             self.check_jeebies(step, line)
+            self.check_orphan_character(step, line)
+            self.check_pling_scanno(step, line)
+            self.check_extra_period(step, line)
             # Add line to paragraph
             paragraph += "\n" + line
         # End of file - check the final para
@@ -352,18 +356,90 @@ class BookloupeChecker:
         for match in re.finditer(self.hutbut_regex, line):
             self.add_match_entry(step, match, "Query hut/but error?")
 
-    def add_match_entry(self, step: int, match: re.Match, message: str) -> None:
+    def check_orphan_character(self, step: int, line: str) -> None:
+        """Check for single character line, except (chapter/section/Roman?) numbers
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
+        assert self.dialog is not None
+        if len(line) == 1 and line[0] not in "IVXL0123456789":
+            self.dialog.add_entry(
+                "Query single character line",
+                IndexRange(f"{step}.0", f"{step}.1"),
+            )
+
+    def check_pling_scanno(self, step: int, line: str) -> None:
+        """Check for ` I"`- often should be ` !`
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
+        assert self.dialog is not None
+        for match in re.finditer(' I"', line):
+            self.add_match_entry(step, match, "Query I=exclamation mark?")
+
+    def check_extra_period(self, step: int, line: str) -> None:
+        """Check for period not followed by capital letter.
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
+        assert self.dialog is not None
+        for match in re.finditer(r"(\p{Letter}+)(\. \W*\p{Lowercase_Letter})", line):
+            # Get the word before the period
+            test_word = match[1]
+            # Ignore single letter words or common abbreviations
+            if len(test_word) == 1 or test_word.lower() in (
+                "cent",
+                "cents",
+                "viz",
+                "vol",
+                "vols",
+                "vid",
+                "ed",
+                "al",
+                "etc",
+                "op",
+                "cit",
+                "deg",
+                "min",
+                "chap",
+                "oz",
+                "mme",
+                "mlle",
+                "mssrs",
+            ):
+                continue
+            # Ignore valid Roman numerals
+            try:
+                roman.fromRoman(test_word.upper())
+                continue
+            except roman.InvalidRomanNumeralError:
+                pass
+            # Only report if previous word contains vowels
+            # (backward compatibility, except for addition of "y" as a vowel, for words like "try")
+            if re.search("[aeiouy]", DiacriticRemover.remove_diacritics(test_word)):
+                self.add_match_entry(step, match, "Extra period?", group=2)
+
+    def add_match_entry(
+        self, step: int, match: re.Match, message: str, group: int = 0
+    ) -> None:
         """Add message about given match to dialog.
 
         Args:
             step: Line number being checked.
             match: Match for error on line.
             message: Text for error message.
+            group: Optional captured group number
         """
         assert self.dialog is not None
         self.dialog.add_entry(
             message,
-            IndexRange(f"{step}.{match.start()}", f"{step}.{match.end()}"),
+            IndexRange(f"{step}.{match.start(group)}", f"{step}.{match.end(group)}"),
         )
 
     def is_skippable_line(self, line: str) -> bool:
