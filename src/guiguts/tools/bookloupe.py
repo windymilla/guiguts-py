@@ -32,6 +32,13 @@ class BookloupeChecker:
         """Initialize BookloupeChecker class."""
         self.dictionary: dict[str, int] = {}
         self.dialog: Optional[BookloupeCheckerDialog] = None
+        self.hebe_regex = re.compile(
+            r'(?i)(\b(be could|be would|be is|was be|is be|to he)|",? be)\b'
+        )
+        self.hadbad_regex = re.compile(
+            r"(?i)\b(the had|a had|they bad|she bad|he bad|you bad|i bad)\b"
+        )
+        self.hutbut_regex = re.compile(r"(?i)[;,] hut\b")
 
     def check_file(self) -> None:
         """Check for bookloupe errors in the currently loaded file."""
@@ -101,6 +108,7 @@ class BookloupeChecker:
             self.check_line_length(step, line)
             self.check_starting_punctuation(step, line)
             self.check_missing_para_break(step, line)
+            self.check_jeebies(step, line)
             # Add line to paragraph
             paragraph += "\n" + line
         # End of file - check the final para
@@ -328,6 +336,21 @@ class BookloupeChecker:
                 match,
                 "Query missing paragraph break?",
             )
+
+    def check_jeebies(self, step: int, line: str) -> None:
+        """Check for common he/be and other h/b errors.
+
+        Args:
+            step: Line number being checked.
+            line: Text of line being checked.
+        """
+        assert self.dialog is not None
+        for match in re.finditer(self.hebe_regex, line):
+            self.add_match_entry(step, match, "Query he/be error?")
+        for match in re.finditer(self.hadbad_regex, line):
+            self.add_match_entry(step, match, "Query had/bad error?")
+        for match in re.finditer(self.hutbut_regex, line):
+            self.add_match_entry(step, match, "Query hut/but error?")
 
     def add_match_entry(self, step: int, match: re.Match, message: str) -> None:
         """Add message about given match to dialog.
