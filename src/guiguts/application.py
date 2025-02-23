@@ -78,6 +78,7 @@ from guiguts.tools.bookloupe import bookloupe_check
 from guiguts.tools.jeebies import jeebies_check, JeebiesParanoiaLevel
 from guiguts.tools.levenshtein import levenshtein_check, LevenshteinEditDistance
 from guiguts.tools.pptxt import pptxt
+from guiguts.tools.pphtml import pphtml
 from guiguts.utilities import is_mac, folder_dir_str
 from guiguts.widgets import themed_style, theme_name_internal_from_user
 from guiguts.word_frequency import word_frequency, WFDisplayType, WFSortType
@@ -856,6 +857,7 @@ Fifth Floor, Boston, MA 02110-1301 USA."""
         html_menu.add_separator()
         html_menu.add_button("~Unmatched HTML Tags", unmatched_html_markup)
         html_menu.add_button("HTML ~Link Checker", html_link_check)
+        html_menu.add_button("~PPhtml", pphtml)
         html_menu.add_button("HTML5 ~Validator (online)", html_validator_check)
         html_menu.add_button("~CSS Validator (online)", css_validator_check)
         html_menu.add_separator()
