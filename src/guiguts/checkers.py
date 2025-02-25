@@ -127,7 +127,6 @@ class CheckerViewOptionsDialog(ToplevelDialog):
         check_frame.grid(row=0, column=0)
         max_height = 15  # Don't want too many checkbuttons per column
         for row, option_filter in enumerate(self.checker_dialog.view_options_filters):
-
             check_var = tk.BooleanVar(value=option_filter.on)
 
             def btn_clicked(row: int = row, var: tk.BooleanVar = check_var) -> None:
