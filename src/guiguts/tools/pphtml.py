@@ -2,7 +2,7 @@
 
 from html.parser import HTMLParser
 import os.path
-from typing import Any
+from typing import Any, Optional
 
 from PIL import Image
 import regex as re
@@ -83,26 +83,37 @@ class PPhtmlChecker:
     """PPhtml checker"""
 
     def __init__(self) -> None:
-        """Initialize PPhtml checker"""
+        """Initialize PPhtml checker."""
         self.dialog = PPhtmlCheckerDialog.show_dialog(rerun_command=self.run)
         self.images_dir = ""
         self.image_files: list[str] = []  # list of files in images folder
-        self.filedata: list[str] = []  # string of image file information
+        # dict of image file information (width, height, format, mode, filesize)
+        self.filedata: dict[str, tuple[int, int, str | None, str, int]] = {}
+        self.file_text = ""  # Text of file
+        self.file_lines: list[str] = []  # Text split into lines
+
+    def reset(self) -> None:
+        """Reset PPhtml checker."""
+        self.dialog.reset()
+        self.image_files = []
+        self.filedata = {}
+        self.file_text = maintext().get_text()
+        self.file_lines = self.file_text.split("\n")
+        self.images_dir = os.path.join(os.path.dirname(the_file().filename), "images")
 
     def run(self) -> None:
-        """Run PPhtml"""
-
-        self.dialog.reset()
+        """Run PPhtml."""
+        self.reset()
         self.image_tests()
         self.heading_outline()
 
         self.dialog.display_entries()
+        self.dialog.select_entry_by_index(0)
 
     def image_tests(self) -> None:
         """Various checks relating to image files."""
 
         # find filenames of all the images
-        self.images_dir = os.path.join(os.path.dirname(the_file().filename), "images")
         self.add_section("Image Checks")
         if not os.path.isdir(self.images_dir):
             self.dialog.add_entry("*** No images folder found ***")
@@ -113,9 +124,9 @@ class PPhtmlChecker:
             if os.path.isfile(os.path.join(self.images_dir, fn))
         ]
         self.scan_images()
-        # self.allImagesUsed()
-        # self.allTargetsAvailable()
-        # self.allImages200k()
+        self.all_images_used()
+        self.all_targets_available()
+        self.image_file_sizes()
         # self.coverImage()
         # self.otherImage()
         # if self.verbose:
@@ -136,10 +147,16 @@ class PPhtmlChecker:
 
         # Make sure all are JPEG or PNG images
         for filename in self.image_files:
+            filepath = os.path.join(self.images_dir, filename)
             try:
-                with Image.open(os.path.join(self.images_dir, filename)) as im:
-                    self.filedata.append(
-                        f"{filename}|{im.format}|{im.size[0]}x{im.size[1]}|{im.mode}"
+                with Image.open(filepath) as im:
+                    fsize = os.path.getsize(filepath)
+                    self.filedata[filename] = (
+                        im.width,
+                        im.height,
+                        im.format,
+                        im.mode,
+                        fsize,
                     )
             except IOError:
                 errors.append(f"  file '{filename}' is not an image")
@@ -148,20 +165,87 @@ class PPhtmlChecker:
             if im.format not in ("JPEG", "PNG"):
                 errors.append(f"  file '{filename}' is of type {im.format }")
                 test_passed = False
+        self.output_subsection_errors(
+            test_passed, "Image folder consistency tests", errors
+        )
 
-        pass_string = "[pass]" if test_passed else "*FAIL*"
-        self.add_subsection(f"{pass_string} Image folder consistency tests")
-        for line in errors:
-            self.dialog.add_entry(line)
+    def all_images_used(self) -> None:
+        """Verify all images in the HTML folder used in the HTML."""
+        errors = []
+        test_passed = True
+        count_images = 0
+        for fn in self.filedata:
+            count_images += 1
+            if f"images/{fn}" not in self.file_text:
+                errors.append(f"  Image '{fn}' not used in HTML")
+                test_passed = False
+        self.output_subsection_errors(
+            test_passed, "Image folder files used in the HTML", errors
+        )
+
+    def all_targets_available(self) -> None:
+        """Verify all target images in HTML available in images folder."""
+        errors = []
+        test_passed = True
+        for match in re.finditer(
+            r"(?<=images/)[\p{Lowercase_Letter}-_\d]+\.(jpg|jpeg|png)", self.file_text
+        ):
+            filename = match[0]
+            if filename not in self.filedata:
+                errors.append(
+                    f"  Image '{filename}' referenced in HTML not in images folder"
+                )
+                test_passed = False
+        self.output_subsection_errors(
+            test_passed, "Target images in HTML available in images folder", errors
+        )
+
+    def image_file_sizes(self) -> None:
+        """Show image sizes, and warn/error about large images."""
+        errors = []
+        test_passed = True
+        size_list = sorted(
+            [(fname, values[4]) for fname, values in self.filedata.items()],
+            key=lambda tup: tup[1],
+            reverse=True,
+        )
+        for fname, fsize in size_list:
+            if fsize > 1024 * 1024:
+                severity = "ERROR: "
+                test_passed = False
+            elif fsize > 256 * 1024:
+                severity = "WARNING: "
+            else:
+                severity = ""
+            errors.append(f"  {severity}{fname} ({int(fsize/1024)}K)")
+        self.output_subsection_errors(test_passed, "Image File Sizes", errors)
 
     def heading_outline(self) -> None:
         """Output Document Heading Outline."""
         # Document Heading Outline
         parser = OutlineHTMLParser()
-        parser.feed(maintext().get_text())
+        parser.feed(self.file_text)
         self.add_section("Document Heading Outline")
         for line, pos in parser.outline:
             self.dialog.add_entry(line, pos)
+
+    def output_subsection_errors(
+        self, test_passed: Optional[bool], title: str, errors: list[str]
+    ) -> None:
+        """Output collected errors underneath subsection title.
+
+        Args:
+            test_passed: Whether the test passed, i.e. no errors. None for info only
+            title: Title for this check.
+            errors: List of errors to be output.
+        """
+        if test_passed is None:
+            pass_string = "[info]"
+        else:
+            pass_string = "[pass]" if test_passed else "*FAIL*"
+        self.add_subsection(f"{pass_string} {title}")
+        for line in errors:
+            self.dialog.add_entry(line)
 
     def add_section(self, text: str) -> None:
         """Add section heading to dialog."""
