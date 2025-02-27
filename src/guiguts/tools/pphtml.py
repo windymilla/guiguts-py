@@ -1,7 +1,9 @@
 """PPhtml tool."""
 
+from dataclasses import dataclass
 from html.parser import HTMLParser
 import os.path
+from tkinter import ttk
 from typing import Any, Optional
 
 from PIL import Image
@@ -10,6 +12,7 @@ import regex as re
 from guiguts.checkers import CheckerDialog
 from guiguts.file import the_file
 from guiguts.maintext import maintext
+from guiguts.preferences import preferences, PrefKey, PersistentBoolean
 from guiguts.utilities import IndexRange, IndexRowCol
 
 
@@ -77,6 +80,23 @@ class PPhtmlCheckerDialog(CheckerDialog):
             ),
             **kwargs,
         )
+        ttk.Checkbutton(
+            self.custom_frame,
+            text="Verbose",
+            variable=PersistentBoolean(PrefKey.PPHTML_VERBOSE),
+            takefocus=False,
+        ).grid(row=0, column=0, sticky="NSEW")
+
+
+@dataclass
+class PPhtmlFileData:
+    """Class to hold info about an image file."""
+
+    width: int
+    height: int
+    format: Optional[str]
+    mode: str
+    filesize: int
 
 
 class PPhtmlChecker:
@@ -88,7 +108,7 @@ class PPhtmlChecker:
         self.images_dir = ""
         self.image_files: list[str] = []  # list of files in images folder
         # dict of image file information (width, height, format, mode, filesize)
-        self.filedata: dict[str, tuple[int, int, str | None, str, int]] = {}
+        self.filedata: dict[str, PPhtmlFileData] = {}
         self.file_text = ""  # Text of file
         self.file_lines: list[str] = []  # Text split into lines
 
@@ -127,10 +147,9 @@ class PPhtmlChecker:
         self.all_images_used()
         self.all_targets_available()
         self.image_file_sizes()
-        # self.coverImage()
-        # self.otherImage()
-        # if self.verbose:
-        #     self.imageSummary()
+        self.image_dimensions()
+        if preferences.get(PrefKey.PPHTML_VERBOSE):
+            self.image_summary()
 
     def scan_images(self) -> None:
         """Scan each image, getting size, checking filename, etc."""
@@ -151,7 +170,7 @@ class PPhtmlChecker:
             try:
                 with Image.open(filepath) as im:
                     fsize = os.path.getsize(filepath)
-                    self.filedata[filename] = (
+                    self.filedata[filename] = PPhtmlFileData(
                         im.width,
                         im.height,
                         im.format,
@@ -170,7 +189,7 @@ class PPhtmlChecker:
         )
 
     def all_images_used(self) -> None:
-        """Verify all images in the HTML folder used in the HTML."""
+        """Verify all images in the images folder are used in the HTML."""
         errors = []
         test_passed = True
         count_images = 0
@@ -184,7 +203,7 @@ class PPhtmlChecker:
         )
 
     def all_targets_available(self) -> None:
-        """Verify all target images in HTML available in images folder."""
+        """Verify all target images in HTML are available in images folder."""
         errors = []
         test_passed = True
         for match in re.finditer(
@@ -205,7 +224,7 @@ class PPhtmlChecker:
         errors = []
         test_passed = True
         size_list = sorted(
-            [(fname, values[4]) for fname, values in self.filedata.items()],
+            [(fname, data.filesize) for fname, data in self.filedata.items()],
             key=lambda tup: tup[1],
             reverse=True,
         )
@@ -219,6 +238,53 @@ class PPhtmlChecker:
                 severity = ""
             errors.append(f"  {severity}{fname} ({int(fsize/1024)}K)")
         self.output_subsection_errors(test_passed, "Image File Sizes", errors)
+
+    def image_dimensions(self) -> None:
+        """Cover image width should be >=1600 px and height should be >= 2560 px.
+        Other images must be <= 5000x5000."""
+        errors: list[str] = []
+        test_passed = True
+        for fname, filedata in self.filedata.items():
+            wd = filedata.width
+            ht = filedata.height
+            if fname == "cover.jpg" and (wd < 1600 or ht < 2560):
+                errors.insert(
+                    0,
+                    f"  WARNING: {fname} too small (actual: {wd}x{ht}; recommended >= 1600x2560)",
+                )
+                test_passed = False
+            elif wd > 5000 or ht > 5000:
+                errors.insert(
+                    0,
+                    f"  WARNING: {fname} too large (actual: {wd}x{ht}; recommended <= 5000x5000)",
+                )
+                test_passed = False
+
+        self.output_subsection_errors(test_passed, "Image Dimensions Check", errors)
+
+    def image_summary(self) -> None:
+        """Show information about image (verbose mode only)."""
+        type_desc = {
+            "1": "(1-bit pixels, black and white, stored with one pixel per byte)",
+            "L": "(8-bit pixels, black and white)",
+            "P": "(8-bit pixels, mapped to any other mode using a color palette)",
+            "RGB": "(3x8-bit pixels, true color)",
+            "RGBA": "(4x8-bit pixels, true color with transparency mask)",
+            "CMYK": "(4x8-bit pixels, color separation)",
+            "YCbCr": "(3x8-bit pixels, color video format)",
+            "LAB": "(3x8-bit pixels, the L*a*b color space)",
+            "HSV": "(3x8-bit pixels, Hue, Saturation, Value color space)",
+            "I": "(32-bit signed integer pixels)",
+            "F": "(32-bit floating point pixels)",
+        }
+
+        messages = []
+        for fname, filedata in self.filedata.items():
+            mode_desc = type_desc.get(filedata.mode, filedata.mode)
+            messages.append(
+                f"  {fname}, {filedata.width}x{filedata.height}, {filedata.format} {mode_desc}"
+            )
+        self.output_subsection_errors(None, "Image Summary", messages)
 
     def heading_outline(self) -> None:
         """Output Document Heading Outline."""

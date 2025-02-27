@@ -492,6 +492,7 @@ Fifth Floor, Boston, MA 02110-1301 USA."""
         preferences.set_default(PrefKey.HTML_IMAGE_OVERRIDE_EPUB, True)
         preferences.set_default(PrefKey.HTML_IMAGE_ALIGNMENT, "center")
         preferences.set_default(PrefKey.CSS_VALIDATION_LEVEL, "css3")
+        preferences.set_default(PrefKey.PPHTML_VERBOSE, False)
         preferences.set_default(PrefKey.HIGHLIGHT_PROOFERCOMMENT, True)
         preferences.set_callback(
             PrefKey.HIGHLIGHT_PROOFERCOMMENT, self.highlight_proofercomment_callback
