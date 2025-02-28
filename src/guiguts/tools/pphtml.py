@@ -9,11 +9,11 @@ from typing import Any, Optional
 from PIL import Image
 import regex as re
 
-from guiguts.checkers import CheckerDialog
+from guiguts.checkers import CheckerDialog, CheckerEntryType
 from guiguts.file import the_file
 from guiguts.maintext import maintext
 from guiguts.preferences import preferences, PrefKey, PersistentBoolean
-from guiguts.utilities import IndexRange, IndexRowCol
+from guiguts.utilities import IndexRange, IndexRowCol, sing_plur
 
 
 class OutlineHTMLParser(HTMLParser):
@@ -111,20 +111,29 @@ class PPhtmlChecker:
         self.filedata: dict[str, PPhtmlFileData] = {}
         self.file_text = ""  # Text of file
         self.file_lines: list[str] = []  # Text split into lines
+        self.links: dict[str, list[IndexRange]] = {}
+        self.targets: dict[str, list[IndexRange]] = {}
 
     def reset(self) -> None:
         """Reset PPhtml checker."""
         self.dialog.reset()
+        self.images_dir = os.path.join(os.path.dirname(the_file().filename), "images")
         self.image_files = []
         self.filedata = {}
         self.file_text = maintext().get_text()
         self.file_lines = self.file_text.split("\n")
-        self.images_dir = os.path.join(os.path.dirname(the_file().filename), "images")
+        self.links = {}
+        self.targets = {}
 
     def run(self) -> None:
         """Run PPhtml."""
         self.reset()
         self.image_tests()
+        self.link_tests()
+        # self.ppvTests()
+        # self.pgTests()
+        # self.testCSS()
+        # self.saveReport()
         self.heading_outline()
 
         self.dialog.display_entries()
@@ -286,6 +295,154 @@ class PPhtmlChecker:
             )
         self.output_subsection_errors(None, "Image Summary", messages)
 
+    def link_tests(self) -> None:
+        """Consolidated link tests."""
+        self.add_section("Link Tests")
+
+        self.external_links()
+        self.link_to_cover()
+        self.find_links()
+        self.find_targets()
+        self.link_counts()
+        # self.doResolve()
+
+    def external_links(self) -> None:
+        """Report and external href links."""
+        errors: list[tuple[str, Optional[IndexRange]]] = []
+        test_passed = True
+        count_links = 0
+        for line_num, line in enumerate(self.file_lines):
+            if match := re.search(r"https?://[^'\"\) ]*", line):
+                test_passed = False
+                if count_links <= 10:
+                    start = IndexRowCol(line_num + 1, match.span()[0])
+                    end = IndexRowCol(line_num + 1, match.span()[1])
+                    errors.append(
+                        (f"External link: {match[0]}", IndexRange(start, end))
+                    )
+                if not preferences.get(PrefKey.PPHTML_VERBOSE):
+                    count_links += 1
+        self.output_subsection_errors(test_passed, "External Links Check", errors)
+        if count_links > 10:
+            self.dialog.new_section()
+            self.dialog.add_entry(
+                "  (more external links not reported)",
+                entry_type=CheckerEntryType.FOOTER,
+            )
+
+    def link_to_cover(self) -> None:
+        """Check that an epub cover has been provided:
+        1. id of "coverpage" on an image
+        2. `link rel="icon"` in header
+        3. file named "cover.jpg" or "cover.png" in images folder
+        """
+        title = "Link to cover image for epub"
+        test_passed = False
+        if re.search("id *= *['\"]coverpage['\"]", self.file_text):
+            test_passed = True
+            title += " (using id='coverpage' on image)"
+        elif re.search("rel *= *['\"]icon['\"]", self.file_text):
+            test_passed = True
+            title += " (using link rel='icon')"
+        elif "cover.jpg" in self.filedata:
+            test_passed = True
+            title += " (found cover.jpg in images folder)"
+        elif "cover.png" in self.filedata:
+            test_passed = True
+            title += " (found cover.png in images folder)"
+        self.output_subsection_errors(test_passed, title, [])
+
+    def find_links(self) -> None:
+        """Build dictionary of IndexRanges where internal link occurs, keyed on target name."""
+        link_count = 0
+        for line_num, line in enumerate(self.file_lines):
+            for match in re.finditer(r"href\s*=\s*[\"']#(.*?)[\"']", line):
+                link_count += 1
+                tgt = match[1]
+                idx_range = IndexRange(
+                    IndexRowCol(line_num + 1, match.start()),
+                    IndexRowCol(line_num + 1, match.end()),
+                )
+                if tgt in self.links:
+                    self.links[tgt].append(idx_range)
+                else:
+                    self.links[tgt] = [idx_range]
+        self.output_subsection_errors(
+            None,
+            f"File has {link_count} internal links to {len(self.links)} expected targets",
+            [],
+        )
+
+    def find_targets(self) -> None:
+        """Build dictionary of IndexRanges where targets occur, keyed on target name.
+        Should be only one for each id."""
+        id_count = 0
+        for line_num, line in enumerate(self.file_lines):
+            if "<meta" in line:
+                continue
+            for match in re.finditer(r"id\s*=\s*[\"'](.*?)[\"']", line):
+                id_count += 1
+                tgt = match[1]
+                idx_range = IndexRange(
+                    IndexRowCol(line_num + 1, match.start()),
+                    IndexRowCol(line_num + 1, match.end()),
+                )
+                if tgt in self.targets:
+                    self.targets[tgt].append(idx_range)
+                else:
+                    self.targets[tgt] = [idx_range]
+
+        errors: list[tuple[str, Optional[IndexRange]]] = []
+        test_passed = True
+        for tgt, idx_ranges in self.targets.items():
+            if len(idx_ranges) > 1:
+                test_passed = False
+                for idx_range in idx_ranges:
+                    errors.append((f"Duplicate id: {tgt}", idx_range))
+        self.output_subsection_errors(
+            test_passed,
+            f"Duplicate ID Check (file has {len(self.targets)} unique IDs)",
+            errors,
+        )
+
+    def link_counts(self) -> None:
+        """Check for multiple links to the same ID, and report number of image links."""
+        errors: list[tuple[str, Optional[IndexRange]]] = []
+        test_passed = True
+        num_reused = 0
+        for tgt, idx_ranges in self.links.items():
+            if len(idx_ranges) > 1:
+                test_passed = False
+                num_reused += 1
+                for idx_range in idx_ranges:
+                    errors.append((f"WARNING: Multiple links to id {tgt}", idx_range))
+        if num_reused <= 5:
+            self.output_subsection_errors(
+                test_passed,
+                "Check for IDs targeted by multiple links",
+                errors,
+            )
+        else:
+            self.output_subsection_errors(
+                None,
+                f"Not reporting {num_reused} IDs linked to more than once (file may have an index)",
+                [],
+            )
+
+        im_count = 0
+        inc_cover = ""
+        for line in self.file_lines:
+            for match in re.finditer(r'href=["\']images/(.*?)["\']', line):
+                if match[1].startswith("cover."):
+                    inc_cover = f" (including {match[1]})"
+                im_count += 1
+        if im_count > 0:
+            self.output_subsection_errors(
+                None,
+                f"File has {sing_plur(im_count, 'link')} to images{inc_cover}",
+                [],
+            )
+
     def heading_outline(self) -> None:
         """Output Document Heading Outline."""
         # Document Heading Outline
@@ -296,7 +453,10 @@ class PPhtmlChecker:
             self.dialog.add_entry(line, pos)
 
     def output_subsection_errors(
-        self, test_passed: Optional[bool], title: str, errors: list[str]
+        self,
+        test_passed: Optional[bool],
+        title: str,
+        errors: list[str] | list[tuple[str, Optional[IndexRange]]],
     ) -> None:
         """Output collected errors underneath subsection title.
 
@@ -310,8 +470,11 @@ class PPhtmlChecker:
         else:
             pass_string = "[pass]" if test_passed else "*FAIL*"
         self.add_subsection(f"{pass_string} {title}")
-        for line in errors:
-            self.dialog.add_entry(line)
+        for error in errors:
+            if isinstance(error, str):
+                self.dialog.add_entry(error)
+            else:
+                self.dialog.add_entry(error[0], error[1])
 
     def add_section(self, text: str) -> None:
         """Add section heading to dialog."""
