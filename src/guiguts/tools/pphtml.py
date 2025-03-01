@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from html.parser import HTMLParser
 import os.path
+from textwrap import wrap
 from tkinter import ttk
 from typing import Any, Optional
 
@@ -304,7 +305,7 @@ class PPhtmlChecker:
         self.find_links()
         self.find_targets()
         self.link_counts()
-        # self.doResolve()
+        self.do_resolve()
 
     def external_links(self) -> None:
         """Report and external href links."""
@@ -442,6 +443,40 @@ class PPhtmlChecker:
                 f"File has {sing_plur(im_count, 'link')} to images{inc_cover}",
                 [],
             )
+
+    def do_resolve(self) -> None:
+        """Every link must go to one link target that exists (or flag missing link target).
+        Every target should come from one or more links (or flag unused target)
+        """
+        errors: list[tuple[str, Optional[IndexRange]]] = []
+        test_passed = True
+        for alink, idx_ranges in self.links.items():
+            if alink not in self.targets:
+                test_passed = False
+                for idx_range in idx_ranges:
+                    errors.append((f"  Target {alink} not found", idx_range))
+        self.output_subsection_errors(
+            test_passed, "Check links point to valid targets", errors
+        )
+
+        reported = 0
+        report_limit = 20
+        untargeted = []
+        for atarget in self.targets:
+            if atarget not in self.links:
+                reported += 1
+                if reported > report_limit:
+                    break
+                untargeted.append(atarget)
+        join_string = ", ".join(untargeted)
+        wrapped_lines = wrap(
+            join_string, width=60, initial_indent="  ", subsequent_indent="  "
+        )
+        if reported > report_limit:
+            wrapped_lines[-1] += " ... more not reported"
+        self.output_subsection_errors(
+            reported == 0, "Check for unreferenced targets", wrapped_lines
+        )
 
     def heading_outline(self) -> None:
         """Output Document Heading Outline."""
