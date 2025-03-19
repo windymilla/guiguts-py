@@ -115,6 +115,11 @@ class PrefKey(StrEnum):
     EBOOKMAKER_EPUB3 = auto()
     EBOOKMAKER_KINDLE = auto()
     EBOOKMAKER_KF8 = auto()
+    ASCII_TABLE_HANGING = auto()
+    ASCII_TABLE_INDENT = auto()
+    ASCII_TABLE_REWRAP = auto()
+    ASCII_TABLE_JUSTIFY = auto()
+    ASCII_TABLE_RIGHT = auto()
 
 
 class Preferences:
