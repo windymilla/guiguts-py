@@ -15,7 +15,7 @@ from guiguts.preferences import (
     PersistentString,
 )
 from guiguts.widgets import ToplevelDialog
-from guiguts.utilities import sound_bell, TextWrapper, IndexRowCol
+from guiguts.utilities import sound_bell, TextWrapper, IndexRowCol, is_mac
 
 logger = logging.getLogger(__package__)
 
@@ -202,11 +202,30 @@ class ASCIITableDialog(ToplevelDialog):
         )
         move_right_button.grid(row=0, column=3, sticky="NSEW")
 
+        # Since focus remains in dialog when buttons are pressed, bind undo/redo
+        # keys to dialog so they work when the user wants to undo the previous operation
+        self.key_bind("Cmd/Ctrl+Z", lambda: maintext().event_generate("<<Undo>>"))
+        self.key_bind(
+            "Cmd+Shift+Z" if is_mac() else "Ctrl+Y",
+            lambda: maintext().event_generate("<<Redo>>"),
+        )
+        # Also, if user does undo/redo, we want to refresh the table display
+        maintext().add_undo_redo_callback(
+            self.__class__.__name__, self.refresh_table_display
+        )
+
         self.selected_col_width_label = ttk.Label(adjust_col_row2_frame)
         self.selected_col_width_label.grid(row=0, column=4, sticky="NSEW")
-        self.column_width_refresh(-1)
-
         self.table_select()
+        self.refresh_table_display()
+
+    def on_destroy(self) -> None:
+        """Override method that tidies up when the dialog is destroyed.
+
+        Needs to remove the undo_redo callback.
+        """
+        super().on_destroy()
+        maintext().remove_undo_redo_callback(self.__class__.__name__)
 
     def column_adjust(self, direction: int) -> int:
         """Move a column dividing line left or right.
@@ -253,8 +272,7 @@ class ASCIITableDialog(ToplevelDialog):
             # Belt-n-braces.
             if column_index == 0:
                 self.selected_column = -1
-                self.remove_column_highlighting()
-                self.refresh_table_highlighting()
+                self.refresh_table_display()
                 return 0
             # Remove trailing spaces from each row of table copy.
             selection = re.sub(r"\n +$", "\n", selection)
@@ -475,18 +493,22 @@ class ASCIITableDialog(ToplevelDialog):
         # Temporary value
         return 0
 
-    def column_width_refresh(self, row: int) -> None:
+    def column_width_refresh(self) -> None:
         """Calculate the width of selected column and display it.
 
         Args:
             row: Row to use to calculate column width on. Negative to clear width.
         """
         width_text = ""
-        if row >= 0 and self.selected_column >= 0:
-            column_width_text = maintext().get(f"{row}.0", f"{row}.end")
+        try:
+            start_row = maintext().rowcol(self.start_mark_name).row
+        except tk.TclError:
+            start_row = -1
+        if start_row > 0 and self.selected_column >= 0:
+            column_width_text = maintext().get(f"{start_row}.0", f"{start_row}.end")
             cells = column_width_text.split("|")
             if self.selected_column < len(cells):
-                width_text = f" {self.selected_column} (width {len(cells[-self.selected_column])})"
+                width_text = f" {self.selected_column+1} (width {len(cells[self.selected_column])})"
         self.adjust_col_frame["text"] = f"Adjust Column{width_text}"
 
     def table_select(self) -> None:
@@ -526,9 +548,8 @@ class ASCIITableDialog(ToplevelDialog):
         # table body tag highlighting. To have our table body tag highlight the whole
         # of the selection (i.e. our table), clear selection first.
         maintext().clear_selection()
-        self.refresh_table_highlighting()
         self.selected_column = -1
-        self.column_width_refresh(-1)
+        self.refresh_table_display()
 
     def table_deselect(self) -> None:
         """Handle click on 'Table Deselect' button."""
@@ -546,9 +567,7 @@ class ASCIITableDialog(ToplevelDialog):
             else:
                 mark = mark_next
         self.selected_column = -1
-        self.column_width_refresh(-1)
-        self.remove_column_highlighting()
-        self.refresh_table_highlighting()
+        self.refresh_table_display()
 
     def insert_vert_line(self, mode: str) -> None:
         """Handle click on 'Insert Vertical Line & 'Add Vertical Line' buttons.
@@ -564,7 +583,6 @@ class ASCIITableDialog(ToplevelDialog):
         """Add a column dividing line according to mode (see above)."""
         # Has user selected a table?
         if not self.table_is_marked():
-            # Warn them and exit as there is nothing to process.
             sound_bell()
             return
         made_a_dividing_line = False
@@ -629,14 +647,12 @@ class ASCIITableDialog(ToplevelDialog):
                     )
                     made_a_dividing_line = True
         # All inserts/replacements done and/or table lines padded with spaces.
-        self.refresh_table_highlighting()
-        # If we have inserted/added a divider then highlight it and display new column's width.
+        # If we have inserted/added a divider then select it then refresh table.
         if made_a_dividing_line:
             self.selected_column = self.get_selected_column_from_rowcol(
                 IndexRowCol(table_row, cursor_column)
             )
-            self.column_width_refresh(start_row)
-            self.highlight_column_divider()
+        self.refresh_table_display()
 
     def space_out_table(self) -> None:
         """Handle click on 'Space Out Table' button."""
@@ -648,7 +664,6 @@ class ASCIITableDialog(ToplevelDialog):
         ranges = maintext().tag_ranges(HighlightTag.TABLE_BODY)
         # Has user selected a table?
         if len(ranges) == 0:
-            # No, so warn them and exit as there is nothing to process.
             sound_bell()
             return
         # Get start and end row/col of table from marks.
@@ -656,8 +671,7 @@ class ASCIITableDialog(ToplevelDialog):
         start_col = maintext().rowcol(self.start_mark_name).col
         end_row = maintext().rowcol(self.end_mark_name).row
         end_col = maintext().rowcol(self.end_mark_name).col
-        self.remove_column_highlighting()
-        self.refresh_table_highlighting()
+        self.refresh_table_display()
         # Back up a row if last row of table is blank.
         if end_col == 0:
             end_row -= 1
@@ -709,15 +723,13 @@ class ASCIITableDialog(ToplevelDialog):
         ranges = maintext().tag_ranges(HighlightTag.TABLE_BODY)
         # Has user selected a table?
         if len(ranges) == 0:
-            # No, so warn them and exit as there is nothing to process.
             sound_bell()
             return
         # Get start and end row/col of table from marks.
         start_row = maintext().rowcol(self.start_mark_name).row
         end_row = maintext().rowcol(self.end_mark_name).row
         end_col = maintext().rowcol(self.end_mark_name).col
-        self.remove_column_highlighting()
-        self.refresh_table_highlighting()
+        self.refresh_table_display()
         # Back up a row if last row of table is blank.
         if end_col == 0:
             end_row -= 1
@@ -730,39 +742,19 @@ class ASCIITableDialog(ToplevelDialog):
     def delete_selected_line(self) -> None:
         """Handle click on 'Delete Sel. Line' button."""
         maintext().undo_block_begin()
-        self.do_delete_selected_line()
-
-    def do_delete_selected_line(self) -> None:
-        """Delete selected column divider from each table row in which it appears."""
-        # NB 'ranges' is a tuple that contains zero or more pairs of indexes as strings.
-        #    e.g. ("1.2", "1.3", "2.2", "2.3", "3.2", "3.3", ...)
-        # If a there is a selected column divider then there will be as many pairs of
-        # indexes in the tuple as there are rows in the table. If no column divider is
-        # selected then the tuple is empty.
-        ranges_tuple = maintext().tag_ranges(HighlightTag.TABLE_COLUMN)
-        # Is there a selected column divider in the table?
-        if len(ranges_tuple) == 0:
-            return
-        # Convert tuple to a list as it's easier to manipulate.
-        ranges = list(ranges_tuple)
-        self.remove_column_highlighting()
-        self.refresh_table_highlighting()
-        # Now delete the selected column divider from each table row in which it appears.
-        while ranges:
-            index2 = ranges.pop()
-            index1 = ranges.pop()
-            if maintext().get(index1, index2) == "|":
-                maintext().delete(index1, index2)
-        self.selected_column = -1
-        self.column_width_refresh(-1)
+        self.do_delete_remove_selected_line("d")
 
     def remove_selected_line(self) -> None:
-        """Handle click on 'Delete Sel. Line' button."""
+        """Handle click on 'Remove Sel. Line' button."""
         maintext().undo_block_begin()
-        self.do_remove_selected_line()
+        self.do_delete_remove_selected_line("r")
 
-    def do_remove_selected_line(self) -> None:
-        """Delete selected column divider from each table row in which it appears."""
+    def do_delete_remove_selected_line(self, mode: str) -> None:
+        """Delete selected column divider from each table row in which it appears.
+        Args:
+            mode: 'd' - Delete Sel. Line button - delete column divider
+                  'r' - Remove Sel. Line button - replace column divider with space
+        """
         # NB 'ranges' is a tuple that contains zero or more pairs of indexes as strings.
         #    e.g. ("1.2", "1.3", "2.2", "2.3", "3.2", "3.3", ...)
         # If a there is a selected column divider then there will be as many pairs of
@@ -774,16 +766,15 @@ class ASCIITableDialog(ToplevelDialog):
             return
         # Convert tuple to a list as it's easier to manipulate.
         ranges = list(ranges_tuple)
-        self.remove_column_highlighting()
-        # Now delete the selected column divider from each table row in which it appears.
+        # Now delete (or replace with a space) the selected column divider from each table row in which it appears.
+        replacement = " " if mode == "r" else ""
         while ranges:
             index2 = ranges.pop()
             index1 = ranges.pop()
             if maintext().get(index1, index2) == "|":
-                maintext().replace(index1, index2, " ")
-        self.refresh_table_highlighting()
-        self.selected_column = -1
-        self.column_width_refresh(-1)
+                maintext().replace(index1, index2, replacement)
+        self.selected_column %= len(self.get_table()[0])
+        self.refresh_table_display()
 
     def select_prev_line(self) -> None:
         """Handle click on 'Select Prev. Line' button."""
@@ -792,157 +783,39 @@ class ASCIITableDialog(ToplevelDialog):
 
     def do_select_prev_line(self) -> None:
         """Select the previous column divider."""
-
-        # Look for the 'previous' column divider, starting search along first
-        # row of the table at the currently selected divider. If there isn't a
-        # currently selected divider then start the search along first row of the
-        # table at the column position of the cursor. If the cursor is outside
-        # the table then start search from the end of the first row of the table.
-        # The search looks along the first row for a '|' character, the column
-        # divider character. It assumes that if it finds one then that character
-        # is repeated in the same column on all the other rows down to the last
-        # row. This means that if there is a random '|' character in the first
-        # row then it thinks that is the top of a column divider line. A random
-        # '|' on any other row is ignored in the search.
-
-        # Is there a table selected?
-        if not self.table_is_marked():
-            # No. Just return.
-            return
-        # Is there a highlighted column divider line in table?
-        ranges = maintext().tag_ranges(HighlightTag.TABLE_COLUMN)
-        if len(ranges) == 0:
-            # No currently selected column divider. Try current cursor position instead.
-            start_index = maintext().get_insert_index().index()
-            # If it's outside the table, start search at end of first table row.
-            if maintext().compare(
-                start_index, "<", self.start_mark_name
-            ) or maintext().compare(start_index, ">", self.end_mark_name):
-                # Cursor is outside of the table.
-                start_index = maintext().index(f"{self.start_mark_name} lineend")
-            else:
-                # Start search from cursor column position on first table row.
-                _, cur_col = start_index.split(".")
-                tab_row, _ = maintext().index(self.start_mark_name).split(".")
-                # First row of table + cursor column position.
-                start_index = tab_row + "." + cur_col
-        else:
-            # There is a selected column divider line. Start search from before the divider character.
-            start_index = str(ranges[0])
-            self.remove_column_highlighting()
-        # Find previous '|' character on this row.
-        stop_index = maintext().index(f"{start_index} linestart")
-        # stop_index = maintext().rowcol(f"{start_index} +linestart").index()
-        prev_column = maintext().search(
-            "|", start_index, backwards=True, stopindex=stop_index
-        )
-        if prev_column == "":
-            # If no previous '|' on this row, wrap by looking again from the end of the row.
-            # stop_index = maintext().rowcol(f"{start_index} linestart").index()
-            start_index = maintext().index(f"{start_index} lineend")
-            stop_index = maintext().index(f"{start_index} linestart")
-            prev_column = maintext().search(
-                "|", start_index, backwards=True, stopindex=stop_index
-            )
-            if prev_column == "":
-                # Return silently.
-                return
-        # Here when a previous '|' is found, either from initial backwards search or after
-        # wrapping and searching again from the end of the row.
-        self.refresh_table_highlighting()
-        # Highlight the column divider we've just found.
-        rowcol = maintext().rowcol(prev_column)
-        self.selected_column = self.get_selected_column_from_rowcol(rowcol)
-        self.column_width_refresh(rowcol.row)
-        self.highlight_column_divider()
+        self.do_select_next_prev_line(-1)
 
     def select_next_line(self) -> None:
         """Handle click on 'Select Prev. Line' button."""
         maintext().undo_block_begin()
-        self.do_select_next_line2()
+        self.do_select_next_prev_line(1)
 
-    def do_select_next_line2(self) -> None:
-        """Select the next column divider."""
+    def do_select_next_prev_line(self, idir: int) -> None:
+        """Select the next column divider.
+
+        Args:
+            dir: +1 to select next, -1 to select previous.
+        """
         if not self.table_is_marked():
             return
-        n_cols = len(self.get_table()[0])
+        # If a column is already selected, select the next/previous
         if self.selected_column >= 0:
-            self.selected_column = (self.selected_column + 1) % n_cols
+            self.selected_column = self.selected_column + idir
+        # If no column selected, base on cursor position: the next/prev
+        # from the cursor, or the first column if cursor not in table at all
         else:
             insert_rowcol = maintext().get_insert_index()
             if maintext().compare(
                 insert_rowcol.index(), "<", self.start_mark_name
-            ) or maintext().compare(insert_rowcol.index(), ">", self.end_mark_name):
+            ) or maintext().compare(insert_rowcol.index(), ">=", self.end_mark_name):
                 self.selected_column = 0
             else:
                 self.selected_column = self.get_selected_column_from_rowcol(
                     insert_rowcol
-                )
-        self.column_width_refresh(maintext().rowcol(self.start_mark_name).row)
-        self.highlight_column_divider()
-
-    def do_select_next_line(self) -> None:
-        """Select the next column divider."""
-
-        # Look for the 'next' column divider, starting search along first row of
-        # the table at the currently selected divider. If there isn't a currently
-        # selected divider then start the search along first row of the table
-        # at the column position of the cursor. If the cursor is outside the
-        # table then start search from the start of the first row of the table.
-        # The search looks along the first row for a '|' character, the column
-        # divider character. It assumes that if it finds one then that character
-        # is repeated in the same column on all the other rows down to the last
-        # row. This means that if there is a random '|' character in the first
-        # row then it thinks that is the top of a column divider line. A random
-        # '|' on any other row is ignored in the search.
-
-        # Is there a table selected?
-        if not self.table_is_marked():
-            return
-        # Is there a highlighted column divider line in the table?
-        ranges = maintext().tag_ranges(HighlightTag.TABLE_COLUMN)
-        if len(ranges) == 0:
-            # No currently selected column divider. Try current cursor position instead.
-            start_index = maintext().get_insert_index().index()
-            # If it's outside the table, start search at start of first table row.
-            if maintext().compare(
-                start_index, "<", self.start_mark_name
-            ) or maintext().compare(start_index, ">", self.end_mark_name):
-                # Cursor is outside of the table.
-                start_index = maintext().index(f"{self.start_mark_name} linestart")
-            else:
-                # Start search from cursor column position on first table row.
-                _, cur_col = start_index.split(".")
-                tab_row, _ = maintext().index(self.start_mark_name).split(".")
-                # First row of table + cursor column position.
-                start_index = tab_row + "." + cur_col
-        else:
-            # There is a selected column divider line. Start search from after the divider character.
-            start_index = str(ranges[1])
-            self.remove_column_highlighting()
-        # Find next '|' character on this row.
-        stop_index = maintext().index(f"{start_index} lineend")
-        next_column = maintext().search(
-            "|", start_index, forwards=True, stopindex=stop_index
-        )
-        if next_column == "":
-            # If no next '|' on this row, wrap by looking again from the start of the row.
-            start_index = maintext().index(f"{start_index} linestart")
-            stop_index = maintext().index(f"{start_index} lineend")
-            next_column = maintext().search(
-                "|", start_index, forwards=True, stopindex=stop_index
-            )
-            if next_column == "":
-                # Return silently.
-                return
-        # Here when a next '|' is found, either from initial forwards search or after
-        # wrapping and searching again from the start of the row.
-        self.refresh_table_highlighting()
-        # Highlight the column divider we've just found.
-        rowcol = maintext().rowcol(next_column)
-        self.selected_column = self.get_selected_column_from_rowcol(rowcol)
-        self.column_width_refresh(rowcol.row)
-        self.highlight_column_divider()
+                ) - (1 if idir < 0 else 0)
+        # Ensure selected column is between 0 & number of columns
+        self.selected_column %= len(self.get_table()[0])
+        self.refresh_table_display()
 
     def line_deselect(self) -> None:
         """Handle click on 'Line Deselect' button."""
@@ -954,10 +827,8 @@ class ASCIITableDialog(ToplevelDialog):
         # Is there a table selected?
         if not self.table_is_marked():
             return
-        self.remove_column_highlighting()
-        self.refresh_table_highlighting()
         self.selected_column = -1
-        self.column_width_refresh(-1)
+        self.refresh_table_display()
 
     def auto_columns(self) -> None:
         """Handle click on 'Auto Columns' button."""
@@ -977,9 +848,8 @@ class ASCIITableDialog(ToplevelDialog):
             for col_num, col in enumerate(row):
                 row[col_num] += " " * (col_widths[col_num] - len(col))
         self.put_table(tbl)
-        self.refresh_table_highlighting()
         self.selected_column = -1
-        self.column_width_refresh(-1)
+        self.refresh_table_display()
 
     def get_table(self, strip_cells: bool = False) -> list[list[str]]:
         """Get table from file and return as a list of lists.
@@ -1042,11 +912,14 @@ class ASCIITableDialog(ToplevelDialog):
                     cols[col_num] = size
         return cols
 
-    def refresh_table_highlighting(self) -> None:
+    def refresh_table_display(self) -> None:
         """Refresh the table highlighting after an edit. Remove tag from
         whole file and attempt to add it to table. It's OK if the table
         isn't marked at the moment. This refreshing avoids parts of table
-        not being highlighted after editing."""
+        not being highlighted after editing.
+
+        Also highlight current column if any and display current column width.
+        """
         maintext().tag_remove(HighlightTag.TABLE_BODY, "1.0", tk.END)
         try:
             maintext().tag_add(
@@ -1054,13 +927,16 @@ class ASCIITableDialog(ToplevelDialog):
             )
         except tk.TclError:
             pass  # OK if no start/end tags
+        self.remove_column_highlighting()
+        self.highlight_column_divider()
+        self.column_width_refresh()
 
     def remove_column_highlighting(self) -> None:
         """Remove column highlighting from whole file (to be safe)."""
         maintext().tag_remove(HighlightTag.TABLE_COLUMN, "1.0", tk.END)
 
     def get_selected_column_from_rowcol(self, rowcol: IndexRowCol) -> int:
-        """Return which column is currently selected, given an rowcol.
+        """Return which column is currently selected, given a rowcol.
 
         Returns:
             Number of "|" characters on line before given col.
@@ -1069,7 +945,8 @@ class ASCIITableDialog(ToplevelDialog):
         line = maintext().get(f"{rowcol.row}.0", f"{rowcol.row}.end")
         if "|" not in line:
             return -1
-        return line.count("|", 0, rowcol.col)
+        # Ensure result is between 0 & number of cols
+        return line.count("|", 0, rowcol.col) % len(self.get_table()[0])
 
     def table_is_marked(self) -> bool:
         """Returns 'False' if no table has been selected and marked."""
@@ -1084,11 +961,13 @@ class ASCIITableDialog(ToplevelDialog):
 
     def highlight_column_divider(self) -> None:
         """Highlight currently selected column divider."""
-        self.remove_column_highlighting()
         if self.selected_column < 0:
             return
-        start = maintext().rowcol(self.start_mark_name)
-        end = maintext().rowcol(self.end_mark_name)
+        try:
+            start = maintext().rowcol(self.start_mark_name)
+            end = maintext().rowcol(self.end_mark_name)
+        except tk.TclError:
+            return  # No table marked
         # Back up a row if last row of table is blank.
         if end.col == 0:
             end.row -= 1
