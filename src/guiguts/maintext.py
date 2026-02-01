@@ -996,6 +996,13 @@ class MainText(tk.Text):
                     force_break=False,
                     bind_peer=True,
                 )
+            for arrow in ("Left", "Right"):
+                self.bind_event(
+                    f"<Shift-Command-{arrow}>",
+                    lambda _event: "",
+                    force_break=False,
+                    bind_peer=True,
+                )
 
         # Double (word) and triple (line) clicking to select, leaves the anchor point
         # wherever the user clicked, so force it instead to be at the start of the word/line.
