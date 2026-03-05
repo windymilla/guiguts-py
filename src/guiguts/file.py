@@ -7,6 +7,7 @@ import os.path
 from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox
+import traceback
 from typing import Any, Callable, Final, Literal, Optional
 
 import regex as re
@@ -319,6 +320,7 @@ class File:
         Returns:
             Current filename or "" if save is cancelled
         """
+        fname1 = self.filename
         # If there's no filename, need to do Save As, but if called
         # via autosave, do nothing
         if not self.filename:
@@ -361,8 +363,16 @@ class File:
                 f"Error details:\n{str(exc)}"
             )
         try:
+            fname2 = self.filename
             maintext().do_save(self.filename)
         except OSError as exc:
+            fname3 = self.filename
+            print("===== START OF DEBUG INFO =====", flush=True)
+            traceback.print_exception(type(exc), exc, exc.__traceback__)
+            print(f"fname1: {fname1}", flush=True)
+            print(f"fname2: {fname2}", flush=True)
+            print(f"fname3: {fname3}", flush=True)
+            print("===== END OF DEBUG INFO =====", flush=True)
             logger.error(
                 f"Unable to save file.\n"
                 f"If problem persists, try saving as a different name or in a different {folder_dir_str(lowercase=True)}.\n"
