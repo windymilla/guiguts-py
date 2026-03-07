@@ -7,8 +7,7 @@ import os.path
 from pathlib import Path
 import tkinter as tk
 from tkinter import messagebox
-
-# import traceback
+import traceback
 from typing import Any, Callable, Final, Literal, Optional
 
 import regex as re
@@ -321,37 +320,28 @@ class File:
         Returns:
             Current filename or "" if save is cancelled
         """
-        fname1d = fname1e = fname1f = fname1g = fname1h = fname1i = fname2 = fname3 = (
-            "unassigned"
-        )
         fname1 = self.filename
         # If there's no filename, need to do Save As, but if called
         # via autosave, do nothing
         if not self.filename:
             return "" if autosave else self.save_as_file()
         # If we have a filename, then need to do appropriate backups
-        fname1a = self.filename
 
         def get_backup_names(ext: str) -> tuple[str, str]:
             """Get backup names for filename and bin file."""
             return f"{self.filename}{ext}", f"{bin_name(self.filename)}{ext}"
 
         Busy.busy()
-        fname1b = self.filename
         binfile_name = bin_name(self.filename)
-        fname1c = self.filename
         try:
             if autosave:
-                fname1d = self.filename
                 # Don't autosave if nothing changed - just reschedule
                 if not maintext().is_modified():
                     self.reset_autosave()
                     Busy.unbusy()
                     return ""
-                fname1e = self.filename
                 backup2_file, backup2_bin = get_backup_names(".bk2")
                 backup1_file, backup1_bin = get_backup_names(".bk1")
-                fname1f = self.filename
                 if os.path.exists(backup1_file):
                     os.replace(backup1_file, backup2_file)
                 if os.path.exists(backup1_bin):
@@ -360,11 +350,8 @@ class File:
                     os.replace(self.filename, backup1_file)
                 if os.path.exists(binfile_name):
                     os.replace(binfile_name, backup1_bin)
-                fname1g = self.filename
             elif preferences.get(PrefKey.BACKUPS_ENABLED):
-                fname1h = self.filename
                 backup_file, backup_bin = get_backup_names(".bak")
-                fname1i = self.filename
                 if os.path.exists(self.filename):
                     os.replace(self.filename, backup_file)
                 if os.path.exists(binfile_name):
@@ -381,17 +368,8 @@ class File:
         except OSError as exc:
             fname3 = self.filename
             print("===== START OF DEBUG INFO =====", flush=True)
-            # traceback.print_exception(type(exc), exc, exc.__traceback__)
+            traceback.print_exception(type(exc), exc, exc.__traceback__)
             print(f"fname1: {fname1}", flush=True)
-            print(f"fname1a: {fname1a}", flush=True)
-            print(f"fname1b: {fname1b}", flush=True)
-            print(f"fname1c: {fname1c}", flush=True)
-            print(f"fname1d: {fname1d}", flush=True)
-            print(f"fname1e: {fname1e}", flush=True)
-            print(f"fname1f: {fname1f}", flush=True)
-            print(f"fname1g: {fname1g}", flush=True)
-            print(f"fname1h: {fname1h}", flush=True)
-            print(f"fname1i: {fname1i}", flush=True)
             print(f"fname2: {fname2}", flush=True)
             print(f"fname3: {fname3}", flush=True)
             print("===== END OF DEBUG INFO =====", flush=True)
