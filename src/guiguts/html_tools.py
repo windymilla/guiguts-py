@@ -6,6 +6,7 @@ from html.parser import HTMLParser
 import io
 import logging
 import os
+from pathlib import Path
 import subprocess
 import tkinter as tk
 from tkinter import ttk
@@ -889,9 +890,8 @@ class HTMLImageBaseDialog(ToplevelDialog):
 
         # Construct HTML
         if preferences.get(PrefKey.HTML_IMAGE_EMBELLISHED_HR):
-            html = (
-                f'<hr class="hrimage" style="background-image: url(\'{filename}\');">'
-            )
+            hr_class = "hr_" + DiacriticRemover.remove_diacritics(Path(filename).stem)
+            html = f'<hr class="hrimage {hr_class}">'
         else:
             html = f'<figure class="{alignment}{fig_class}" id="{image_id}"{style}>\n'
             html += f'  <img{img_class} src="{filename}"{img_size}{alt}{role}>\n'
@@ -905,8 +905,20 @@ class HTMLImageBaseDialog(ToplevelDialog):
         )
         self.illo_range = None
 
-        # Now to insert CSS at end of style block, except for px sizes
-        if not preferences.get(PrefKey.HTML_IMAGE_EMBELLISHED_HR):
+        # Now to insert CSS at end of style block
+        if preferences.get(PrefKey.HTML_IMAGE_EMBELLISHED_HR):
+            insert_point = maintext().search("</style", "1.0", tk.END)
+            if not insert_point:
+                return
+            cssdef = f".{hr_class} {{background-image: url('{filename}');}}"
+            # Add heading if there's not one already
+            heading = "/* Illustration classes */"
+            if not maintext().search(heading, "1.0", insert_point):
+                cssdef = f"\n{heading}\n{cssdef}"
+            # Only insert if definition not already in file
+            if not maintext().search(cssdef, "1.0", insert_point):
+                maintext().insert(f"{insert_point} linestart", f"{cssdef}\n")
+        else:
             insert_point = maintext().search("</style", "1.0", tk.END)
             if unit_type == "px" or not insert_point:
                 return
