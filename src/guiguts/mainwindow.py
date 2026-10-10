@@ -1400,8 +1400,7 @@ class MessageLog(logging.Handler):
         self._messagelog += message
 
         # If dialog is visible, append error
-        assert self.dialog is not None
-        if hasattr(self, "dialog") and self.dialog.winfo_exists():
+        if self.dialog is not None and self.dialog.winfo_exists():
             self.dialog.append(message)
             self.dialog.lift()
 
