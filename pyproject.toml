@@ -35,6 +35,7 @@ types-requests = "^2.33"
 types-lxml = "^2026.2"
 types-ttkthemes = "^3.3"
 build = "^1.6"
+ruff = "^0.17.6"
 
 [tool.poetry.scripts]
 guiguts = "guiguts.application:main"
@@ -69,6 +70,23 @@ disable = [
 ]
 enable = ["c-extension-no-member"]
 extension-pkg-allow-list = ["unicodedataplus", "lxml.etree"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+extend-select = [
+#    "I",    # isort
+#    "UP",   # pyupgrade
+#    "B",    # bugbear
+#    "SIM",  # simplify
+]
+
+[tool.ruff.lint.pycodestyle]
+max-line-length = 999 # Rely on ruff format for line length
 
 [build-system]
 requires = ["poetry-core"]
