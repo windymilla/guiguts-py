@@ -1308,7 +1308,7 @@ def specials_check(project_dict: ProjectDict) -> None:
                 # Generate dialog tuples only if not an exception.
                 heading = "Query mixed letters/digits in word (excluding exceptions)."
                 # NB 'heading' is accessed in the 'process_word' function
-                #    which is in same scope. flake8 complains about it.
+                #    which is in same scope.
                 process_word(word, exceptions, line)
 
             # If the word occurs again on this line we will not

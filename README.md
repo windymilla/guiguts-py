@@ -334,20 +334,17 @@ poetry env use /usr/local/bin/python3
      poetry env use $(which python3.13)
      ```
 
-### Code style
+### Lint & code style
 
-Guiguts 2 uses [flake8](https://pypi.org/project/flake8) and
-[pylint](https://www.pylint.org) for static code analysis, and
-[ruff](https://pypi.org/project/ruff/) for consistent styling.  All use default
-settings, with the exception of maximum line length checking which is adjusted
-in the recommended manner (using the `.flake8` file and the `tool.pylint`
-section of `pyproject.toml`) to avoid conflicts with ruff.
+Guiguts 2 uses [pylint](https://www.pylint.org) and
+[ruff check](https://pypi.org/project/ruff/) for static code analysis, and
+[ruff format](https://pypi.org/project/ruff) for consistent styling.
 
 All of the above tools will be installed via `poetry` as described above.
 
-`poetry run flake8 .` will check all `src` & `tests` python files.
-
 `poetry run pylint --recursive y .` will check all `src` & `tests` python files.
+
+`poetry run ruff check .` will check all `src` & `tests` python files.
 
 `poetry run ruff format .` will reformat all `src` & `tests` python files where necessary.
 
@@ -357,11 +354,6 @@ error.
 Naming conventions from [PEP8](https://pep8.org/#prescriptive-naming-conventions)
 are used. To summarize, class names use CapWords; constants are ALL_UPPERCASE;
 most other variables, functions and methods are all_lowercase.
-
-### Documentation
-
-[Google-style docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
-are used to document modules, classes, functions, etc.
 
 ### Type checking
 
@@ -384,6 +376,11 @@ To type check the Guiguts package and the test routines:
 poetry run mypy -p guiguts
 poetry run mypy tests
 ```
+
+### Documentation
+
+[Google-style docstrings](https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
+are used to document modules, classes, functions, etc.
 
 ### Testing
 
