@@ -1,55 +1,55 @@
 """Define key components of main window"""
 
-from enum import Enum, auto
 import importlib.resources
 import logging
 import os.path
-from string import ascii_uppercase
 import shlex
 import subprocess
 import time
 import tkinter as tk
-from tkinter import ttk, messagebox, EventType
-from typing import Any, Callable, Optional
-from pathlib import Path
 import urllib.parse
+from enum import Enum, auto
+from pathlib import Path
+from string import ascii_uppercase
+from tkinter import EventType, messagebox, ttk
+from typing import Any, Callable, Optional
 
-from PIL import Image, ImageTk, ImageChops, ImageOps
 import regex as re
+from PIL import Image, ImageChops, ImageOps, ImageTk
 
 from guiguts.data import icons
 from guiguts.maintext import (
     MainText,
-    maintext,
-    menubar_metadata,
     MenuMetadata,
     ScrolledReadOnlyText,
     add_text_context_menu,
+    maintext,
+    menubar_metadata,
 )
-from guiguts.preferences import preferences, PrefKey, PersistentBoolean
-from guiguts.root import Root, root, disable_macos_native_fullscreen
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
+from guiguts.root import Root, disable_macos_native_fullscreen, root
 from guiguts.utilities import (
-    is_mac,
-    is_x11,
-    is_windows,
     bell_set_callback,
+    folder_dir_str,
+    is_mac,
+    is_windows,
+    is_x11,
     process_accel,
     sound_bell,
-    folder_dir_str,
 )
 from guiguts.widgets import (
-    ToplevelDialog,
-    mouse_bind,
-    ToolTip,
-    themed_style,
     Busy,
-    focus_next_widget,
-    focus_prev_widget,
+    FileDialog,
     ThemedStyle,
+    ToolTip,
+    ToplevelDialog,
     TreeviewList,
     bind_shift_tab,
+    focus_next_widget,
+    focus_prev_widget,
     init_global_font,
-    FileDialog,
+    mouse_bind,
+    themed_style,
 )
 
 logger = logging.getLogger(__package__)

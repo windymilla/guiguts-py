@@ -9,9 +9,9 @@ For now, it just writes to "Guiguts_Index.wiki" in the current dir.
 import argparse
 import html
 
-from bs4 import BeautifulSoup
 import regex as re
 import requests
+from bs4 import BeautifulSoup
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

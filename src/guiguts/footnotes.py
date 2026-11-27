@@ -1,10 +1,11 @@
 """Footnote checking, fixing and tidying functionality"""
 
 import logging
-from enum import StrEnum, auto
 import tkinter as tk
+from enum import StrEnum, auto
 from tkinter import ttk
-from typing import Optional, Any
+from typing import Any, Optional
+
 import regex as re
 import roman  # type: ignore[import-untyped]
 
@@ -13,15 +14,15 @@ from guiguts.file import the_file
 from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
 from guiguts.preferences import (
-    PersistentString,
-    PersistentInt,
     PersistentBoolean,
+    PersistentInt,
+    PersistentString,
     PrefKey,
     preferences,
 )
 from guiguts.utilities import (
-    IndexRowCol,
     IndexRange,
+    IndexRowCol,
 )
 from guiguts.widgets import Busy, ToolTip
 

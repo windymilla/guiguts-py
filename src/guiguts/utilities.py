@@ -1,16 +1,16 @@
 """Handy utility functions"""
 
 import ctypes
-from dataclasses import dataclass
 import importlib.resources
 import json
-import platform
 import logging
-from pathlib import Path
 import os.path
+import platform
 import subprocess
+from dataclasses import dataclass
+from pathlib import Path
 from tkinter import _tkinter  # type: ignore[attr-defined]
-from typing import Any, Optional, Callable, Mapping
+from typing import Any, Callable, Mapping, Optional
 from unicodedata import combining, normalize
 
 import regex as re

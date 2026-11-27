@@ -3,42 +3,42 @@
 import gzip
 import importlib.resources
 import logging
-from pathlib import Path
 import shutil
 import subprocess
 import tkinter as tk
+from pathlib import Path
 from tkinter import ttk
 from typing import Any, Final, Iterator, Optional
 
-from PIL import Image, UnidentifiedImageError
 import regex as re
+from PIL import Image, UnidentifiedImageError
 
 from guiguts.checkers import (
+    MARK_ENTRY_TO_SELECT,
     CheckerDialog,
     CheckerEntry,
-    CheckerMatchType,
     CheckerEntrySeverity,
-    CheckerViewOptionsDialog,
     CheckerFilterErrorPrefix,
+    CheckerMatchType,
     CheckerSortType,
-    MARK_ENTRY_TO_SELECT,
+    CheckerViewOptionsDialog,
 )
 from guiguts.data import cp_files
 from guiguts.file import the_file
 from guiguts.maintext import maintext
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
 from guiguts.project_dict import ProjectDict
 from guiguts.root import root
-from guiguts.spell import get_spell_checker, SPELL_CHECK_OK_YES
+from guiguts.spell import SPELL_CHECK_OK_YES, get_spell_checker
 from guiguts.utilities import (
-    folder_dir_str,
-    cmd_ctrl_string,
-    load_dict_from_json,
     IndexRange,
     IndexRowCol,
+    cmd_ctrl_string,
+    folder_dir_str,
+    load_dict_from_json,
     sing_plur,
 )
-from guiguts.preferences import PersistentBoolean, PrefKey, preferences
-from guiguts.widgets import ToplevelDialog, Busy, ToolTip, FileDialog
+from guiguts.widgets import Busy, FileDialog, ToolTip, ToplevelDialog
 
 logger = logging.getLogger(__package__)
 

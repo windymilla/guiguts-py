@@ -1,20 +1,19 @@
 """Jeebies check functionality"""
 
-from enum import StrEnum, auto
-from tkinter import ttk
-from typing import List, Any
-
 import importlib.resources
 import logging
+from enum import StrEnum, auto
+from tkinter import ttk
+from typing import Any, List
+
 import regex as re
 
 from guiguts.checkers import CheckerDialog, CheckerEntry
 from guiguts.data import dictionaries
 from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
-from guiguts.utilities import cmd_ctrl_string
 from guiguts.preferences import PersistentString, PrefKey, preferences
-from guiguts.utilities import IndexRowCol, IndexRange
+from guiguts.utilities import IndexRange, IndexRowCol, cmd_ctrl_string
 
 logger = logging.getLogger(__package__)
 

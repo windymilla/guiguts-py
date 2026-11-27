@@ -4,10 +4,11 @@ import pytest
 
 from guiguts.application import Guiguts
 from guiguts.file import the_file
-from guiguts.spell import spell_check, SpellCheckerDialog
-from guiguts.tools.jeebies import jeebies_check, JeebiesCheckerDialog
+from guiguts.spell import SpellCheckerDialog, spell_check
+from guiguts.tools.jeebies import JeebiesCheckerDialog, jeebies_check
 from guiguts.tools.pphtml import PPhtmlChecker, PPhtmlCheckerDialog
-from guiguts.tools.pptxt import pptxt, PPtxtCheckerDialog
+from guiguts.tools.pptxt import PPtxtCheckerDialog, pptxt
+
 from .test_support import run_test
 
 

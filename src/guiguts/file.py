@@ -4,50 +4,49 @@ import hashlib
 import json
 import logging
 import os.path
-from pathlib import Path
 import tkinter as tk
+from pathlib import Path
 from tkinter import messagebox
 from typing import Any, Callable, Final, Literal, Optional
 
 import regex as re
 
-from guiguts.mainwindow import mainimage, MainWindow, AutoImageState
 from guiguts.maintext import (
-    maintext,
-    HighlightTag,
     PAGEMARK_PIN,
-    img_from_page_mark,
-    page_mark_from_img,
+    HighlightTag,
     MainText,
     TextPeer,
+    img_from_page_mark,
+    maintext,
+    page_mark_from_img,
 )
+from guiguts.mainwindow import AutoImageState, MainWindow, mainimage
 from guiguts.page_details import (
-    PageDetail,
-    PageDetails,
-    PAGE_LABEL_PREFIX,
     NUMBER_INCREMENT,
+    PAGE_LABEL_PREFIX,
     STYLE_ARABIC,
     STYLE_DITTO,
+    PageDetail,
+    PageDetails,
 )
-from guiguts.preferences import preferences, PrefKey
-from guiguts.project_dict import ProjectDict, GOOD_WORDS_FILENAME, BAD_WORDS_FILENAME
+from guiguts.preferences import PrefKey, preferences
+from guiguts.project_dict import BAD_WORDS_FILENAME, GOOD_WORDS_FILENAME, ProjectDict
 from guiguts.root import root
-
 from guiguts.utilities import (
-    load_dict_from_json,
-    IndexRowCol,
     IndexRange,
-    sound_bell,
+    IndexRowCol,
     folder_dir_str,
     is_test,
+    load_dict_from_json,
+    sound_bell,
 )
 from guiguts.widgets import (
-    grab_focus,
-    ToplevelDialog,
     Busy,
     FileDialog,
+    ToplevelDialog,
     askinteger,
     askstring,
+    grab_focus,
 )
 
 logger = logging.getLogger(__package__)

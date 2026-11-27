@@ -2,14 +2,14 @@
 
 from guiguts.application import Guiguts
 from guiguts.file import File
-from guiguts.preferences import preferences, PrefKey
+from guiguts.preferences import PrefKey, preferences
 from guiguts.utilities import (
+    _is_system,
     is_mac,
     is_windows,
     is_x11,
-    _is_system,
-    process_label,
     process_accel,
+    process_label,
 )
 
 

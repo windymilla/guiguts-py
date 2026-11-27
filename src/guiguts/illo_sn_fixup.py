@@ -3,15 +3,15 @@
 import logging
 import tkinter as tk
 from tkinter import ttk
-from typing import Optional, Any
+from typing import Any, Optional
 
 import regex as re
 
 from guiguts.checkers import CheckerDialog, CheckerEntry
 from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
-from guiguts.preferences import PrefKey, PersistentBoolean, preferences
-from guiguts.utilities import IndexRowCol, IndexRange, sound_bell
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
+from guiguts.utilities import IndexRange, IndexRowCol, sound_bell
 from guiguts.widgets import ToolTip
 
 logger = logging.getLogger(__package__)

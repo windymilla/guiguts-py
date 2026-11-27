@@ -1,44 +1,44 @@
 """Store, analyze and report on word frequency and inconsistencies."""
 
-from collections import Counter
-from enum import StrEnum, auto
 import importlib.resources
 import json
 import logging
 import tkinter as tk
+import unicodedata
+from collections import Counter
+from enum import StrEnum, auto
 from tkinter import ttk
 from typing import Any, Callable, Optional, cast
-import unicodedata
 
 import regex as re
 
 from guiguts.checkers import CheckerDialog, CheckerEntry, CheckerSortType
-from guiguts.data import confusables
 from guiguts.content_providing import CPCharSuitesDialog
-from guiguts.maintext import maintext, HighlightTag
-from guiguts.misc_tools import tool_save, do_open_ngram
+from guiguts.data import confusables
+from guiguts.maintext import HighlightTag, maintext
+from guiguts.misc_tools import do_open_ngram, tool_save
 from guiguts.preferences import (
-    preferences,
     PersistentBoolean,
     PersistentString,
     PrefKey,
+    preferences,
 )
 from guiguts.search import SearchDialog
 from guiguts.utilities import (
-    sing_plur,
     DiacriticRemover,
     IndexRange,
     IndexRowCol,
-    sound_bell,
-    process_accel,
     cmd_ctrl_string,
     non_text_line,
+    process_accel,
+    sing_plur,
+    sound_bell,
 )
 from guiguts.widgets import (
+    Busy,
     Combobox,
     ToolTip,
     mouse_bind,
-    Busy,
 )
 
 logger = logging.getLogger(__package__)

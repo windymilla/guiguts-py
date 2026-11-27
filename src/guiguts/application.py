@@ -3,166 +3,162 @@
 
 import argparse
 import logging
-
-from importlib.metadata import version
 import os
 import sys
 import tkinter as tk
-from typing import Optional
 import unicodedata
 import webbrowser
+from importlib.metadata import version
+from typing import Optional
+
 import darkdetect  # type: ignore[import-untyped]
 from packaging.version import Version
 
-
-from guiguts.ascii_tables import JustifyStyle
+from guiguts.ascii_tables import ASCIITableDialog, JustifyStyle
 from guiguts.checkers import CheckerDialog
 from guiguts.content_providing import (
+    CPCharSuitesDialog,
+    CPRenumberDialog,
+    DehyphenatorChecker,
+    HeadFootChecker,
+    cp_compress_pngs,
+    cp_fix_common_scannos,
+    cp_fix_empty_pages,
+    cp_fix_englifh,
+    cp_list_good_words,
+    cp_show_process_dialog,
     export_prep_text_files,
     import_prep_text_files,
     import_tia_ocr_file,
-    DehyphenatorChecker,
-    HeadFootChecker,
-    cp_fix_common_scannos,
-    cp_fix_englifh,
-    cp_fix_empty_pages,
-    cp_compress_pngs,
-    CPCharSuitesDialog,
-    CPRenumberDialog,
-    cp_list_good_words,
-    cp_show_process_dialog,
 )
-
-from guiguts.file import File, the_file, NUM_RECENT_FILES
-from guiguts.footnotes import footnote_check, FootnoteIndexStyle, footnote_mask
+from guiguts.file import NUM_RECENT_FILES, File, the_file
+from guiguts.footnotes import FootnoteIndexStyle, footnote_check, footnote_mask
 from guiguts.html_convert import HTMLGeneratorDialog, HTMLMarkupTypes
 from guiguts.html_tools import (
-    HTMLImageAutoDialog,
-    HTMLImageEditDialog,
-    HTMLImageManualDialog,
-    HTMLValidator,
-    HTMLLinkChecker,
-    HTMLAltTextChecker,
     CSSValidator,
     EbookmakerChecker,
     EbookmakerCheckerAPI,
-    HTMLAutoTableDialog,
+    HTMLAltTextChecker,
     HTMLAutoListDialog,
-    HTMLMarkupDialog,
+    HTMLAutoTableDialog,
+    HTMLImageAutoDialog,
+    HTMLImageEditDialog,
+    HTMLImageManualDialog,
+    HTMLLinkChecker,
     HTMLLinksDialog,
+    HTMLMarkupDialog,
+    HTMLValidator,
+    latex_convert_pageseps,
     latex_svg_convert,
     latex_undo_autogen,
-    latex_convert_pageseps,
 )
 from guiguts.illo_sn_fixup import illosn_check
-
-from guiguts.ascii_tables import ASCIITableDialog
 from guiguts.maintext import (
-    maintext,
-    menubar_metadata,
-    MenuMetadata,
-    SeparatorMetadata,
+    CUSTOM_TEAROFF_PERFORATIONS,
     ButtonMetadata,
     CheckbuttonMetadata,
     Menu,
+    MenuMetadata,
+    SeparatorMetadata,
     create_tearoff,
-    CUSTOM_TEAROFF_PERFORATIONS,
+    maintext,
+    menubar_metadata,
 )
 from guiguts.mainwindow import (
-    MainWindow,
-    menubar,
-    StatusBar,
-    statusbar,
-    ErrorHandler,
-    mainimage,
     AutoImageState,
-    image_autofit_width_callback,
-    image_autofit_height_callback,
     CustomMenuDialog,
+    ErrorHandler,
+    MainWindow,
+    StatusBar,
+    image_autofit_height_callback,
+    image_autofit_width_callback,
+    mainimage,
+    menubar,
+    statusbar,
 )
 from guiguts.misc_dialogs import (
-    PreferencesDialog,
-    ComposeSequenceDialog,
+    CommandPaletteDialog,
     ComposeHelpDialog,
+    ComposeSequenceDialog,
+    DidYouKnowDialog,
+    HelpAboutDialog,
+    PreferencesDialog,
+    ReleaseNotesDialog,
+    SurroundWithDialog,
     UnicodeBlockDialog,
     UnicodeSearchDialog,
-    HelpAboutDialog,
-    ReleaseNotesDialog,
-    DidYouKnowDialog,
-    CommandPaletteDialog,
-    SurroundWithDialog,
 )
 from guiguts.misc_tools import (
-    BasicFixup,
-    page_separator_fixup,
-    PageSepAutoType,
-    unmatched_dp_markup,
-    unmatched_html_markup,
-    unmatched_brackets,
-    unmatched_block_markup,
-    FractionConvertType,
-    fraction_convert,
-    unicode_normalize,
-    ProoferCommentChecker,
-    asterisk_check,
-    TextMarkupConvertorDialog,
-    stealth_scannos,
-    library_regexes,
-    DEFAULT_SCANNOS_DIR,
-    DEFAULT_REGEX_SCANNOS,
-    DEFAULT_STEALTH_SCANNOS,
+    DEFAULT_DASHES_REGEX_LIBRARY,
+    DEFAULT_DIACRITICAL_MARKS_REGEX_LIBRARY,
+    DEFAULT_ITALIC_SEMANTIC_REGEX_LIBRARY,
     DEFAULT_MISSPELLED_SCANNOS,
     DEFAULT_REGEX_LIBRARY_DIR,
-    DEFAULT_DASHES_REGEX_LIBRARY,
-    DEFAULT_ITALIC_SEMANTIC_REGEX_LIBRARY,
-    DEFAULT_DIACRITICAL_MARKS_REGEX_LIBRARY,
-    convert_to_curly_quotes,
+    DEFAULT_REGEX_SCANNOS,
+    DEFAULT_SCANNOS_DIR,
+    DEFAULT_STEALTH_SCANNOS,
+    BasicFixup,
+    FractionConvertType,
+    PageSepAutoType,
+    ProoferCommentChecker,
+    RegexCheckerDialog,
+    ScannoCheckerDialog,
+    TextMarkupConvertorDialog,
+    align_selection,
+    asterisk_check,
     check_curly_quotes,
+    convert_sequential,
+    convert_to_curly_quotes,
+    fraction_convert,
+    indent_selection,
+    library_regexes,
+    open_ngram,
+    page_separator_fixup,
     protect_html_straight_quotes,
     restore_html_straight_quotes,
-    indent_selection,
-    align_selection,
     right_align_numbers,
-    ScannoCheckerDialog,
-    RegexCheckerDialog,
-    convert_sequential,
-    open_ngram,
+    stealth_scannos,
+    unicode_normalize,
+    unmatched_block_markup,
+    unmatched_brackets,
+    unmatched_dp_markup,
+    unmatched_html_markup,
 )
 from guiguts.page_details import PageDetailsDialog
-from guiguts.preferences import preferences, PrefKey, PersistentBoolean
-from guiguts.root import root, install_macos_hide_workaround
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
+from guiguts.root import install_macos_hide_workaround, root
 from guiguts.search import (
-    show_search_dialog,
+    SearchDialog,
     find_next,
     replace_matched_string,
-    SearchDialog,
+    show_search_dialog,
 )
-from guiguts.spell import spell_check, LanguageFinder
+from guiguts.spell import LanguageFinder, spell_check
 from guiguts.tools.bookloupe import bookloupe_check
-from guiguts.tools.jeebies import jeebies_check, JeebiesParanoiaLevel
-from guiguts.tools.levenshtein import levenshtein_check, LevenshteinEditDistance
-from guiguts.tools.pptxt import pptxt
-from guiguts.tools.pphtml import PPhtmlChecker
+from guiguts.tools.jeebies import JeebiesParanoiaLevel, jeebies_check
+from guiguts.tools.levenshtein import LevenshteinEditDistance, levenshtein_check
 from guiguts.tools.ppcomp import PPcompChecker, PPcompDisplayType
+from guiguts.tools.pphtml import PPhtmlChecker
+from guiguts.tools.pptxt import pptxt
 from guiguts.utilities import (
-    is_mac,
-    is_windows,
-    is_x11,
     folder_dir_str,
     get_keyboard_layout,
-    is_test,
     is_debug,
+    is_mac,
+    is_test,
+    is_windows,
+    is_x11,
 )
 from guiguts.widgets import (
-    themed_style,
-    ToplevelDialog,
     GLOBAL_FONT_NAME,
+    ToplevelDialog,
+    themed_style,
 )
 from guiguts.word_frequency import (
-    word_frequency,
     WFDisplayType,
     WFSortType,
     WordFrequencyDialog,
+    word_frequency,
 )
 
 logger = logging.getLogger(__package__)

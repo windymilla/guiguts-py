@@ -1,20 +1,20 @@
 """PPhtml tool."""
 
+import os.path
+import tkinter as tk
 from dataclasses import dataclass
 from html.parser import HTMLParser
-import os.path
 from textwrap import wrap
-import tkinter as tk
 from tkinter import ttk
 from typing import Any, Optional
 
-from PIL import Image
 import regex as re
+from PIL import Image
 
 from guiguts.checkers import CheckerDialog, CheckerEntryType
 from guiguts.file import the_file
-from guiguts.maintext import maintext, HighlightTag
-from guiguts.preferences import preferences, PrefKey, PersistentBoolean
+from guiguts.maintext import HighlightTag, maintext
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
 from guiguts.utilities import IndexRange, IndexRowCol, sing_plur
 
 DS_STORE = ".DS_Store"  # Don't report hidden Mac file as a bad image file

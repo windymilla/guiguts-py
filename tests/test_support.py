@@ -1,7 +1,7 @@
 """Support functions for testing."""
 
-from pathlib import Path
 import tkinter as tk
+from pathlib import Path
 from typing import Callable, Optional
 
 from guiguts.checkers import CheckerDialog

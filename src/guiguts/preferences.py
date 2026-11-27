@@ -1,15 +1,15 @@
 """Handle preferences"""
 
 import copy
-from enum import StrEnum, auto
 import json
 import logging
 import os
 import time
 import tkinter as tk
+from enum import StrEnum, auto
 from typing import Any, Callable, Optional
 
-from guiguts.utilities import is_x11, is_windows, is_test, load_dict_from_json
+from guiguts.utilities import is_test, is_windows, is_x11, load_dict_from_json
 
 if is_windows():
     from win32com.shell import shell, shellcon  # type: ignore # pylint: disable=import-error, no-name-in-module

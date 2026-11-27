@@ -1,40 +1,40 @@
 """Handle main text widget"""
 
 import copy
-from html.parser import HTMLParser
-from idlelib.redirector import WidgetRedirector  # type: ignore[import-not-found, import-untyped]
 import logging
 import subprocess
 import tkinter as tk
-from tkinter import ttk, Text, messagebox
+from enum import StrEnum, auto
+from html.parser import HTMLParser
+from idlelib.redirector import WidgetRedirector  # type: ignore[import-not-found, import-untyped]
+from tkinter import Text, messagebox, ttk
 from tkinter import font as tk_font
-from typing import Any, Callable, Optional, Literal, Generator
-from enum import auto, StrEnum
+from typing import Any, Callable, Generator, Literal, Optional
 
 import regex as re
 
-from guiguts.preferences import preferences, PrefKey, PersistentBoolean
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
 from guiguts.utilities import (
+    IndexRange,
+    IndexRowCol,
+    TextWrapper,
     is_mac,
     is_x11,
-    IndexRowCol,
-    IndexRange,
-    TextWrapper,
     process_accel,
     process_label,
 )
 from guiguts.widgets import (
-    themed_style,
-    register_focus_widget,
-    grab_focus,
+    ToplevelDialog,
     bind_mouse_wheel,
-    unbind_mouse_wheel,
+    bind_shift_tab,
     focus_next_widget,
     focus_prev_widget,
-    bind_shift_tab,
-    mouse_bind,
-    ToplevelDialog,
+    grab_focus,
     insert_in_focus_widget,
+    mouse_bind,
+    register_focus_widget,
+    themed_style,
+    unbind_mouse_wheel,
 )
 
 logger = logging.getLogger(__package__)

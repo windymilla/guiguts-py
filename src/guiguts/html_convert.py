@@ -1,11 +1,11 @@
 """Functions to convert from text to HTML."""
 
-from enum import StrEnum, auto
 import importlib.resources
 import logging
-from pathlib import Path
 import tkinter as tk
-from tkinter import ttk, messagebox
+from enum import StrEnum, auto
+from pathlib import Path
+from tkinter import messagebox, ttk
 from typing import Optional
 
 import regex as re
@@ -16,19 +16,19 @@ from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
 from guiguts.page_details import PAGE_LABEL_PREFIX, PageDetail
 from guiguts.preferences import (
-    preferences,
-    PrefKey,
-    PersistentString,
     PersistentBoolean,
+    PersistentString,
+    PrefKey,
+    preferences,
 )
 from guiguts.utilities import (
-    IndexRange,
     DiacriticRemover,
+    IndexRange,
     IndexRowCol,
     is_test,
     process_accel,
 )
-from guiguts.widgets import ToplevelDialog, Busy
+from guiguts.widgets import Busy, ToplevelDialog
 
 logger = logging.getLogger(__package__)
 

@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Optional, Any
+from typing import Any, Optional
 
 import roman  # type: ignore[import-untyped]
 
@@ -10,10 +10,10 @@ from guiguts.maintext import maintext, page_mark_from_img
 from guiguts.utilities import cmd_ctrl_string, process_accel
 from guiguts.widgets import (
     OkApplyCancelDialog,
-    mouse_bind,
     ToolTip,
     TreeviewList,
     askinteger,
+    mouse_bind,
 )
 
 STYLE_COLUMN = "#2"

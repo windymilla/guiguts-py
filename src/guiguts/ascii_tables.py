@@ -1,22 +1,23 @@
 """ASCII table special effects functionality."""
 
 import logging
+import tkinter as tk
 from enum import StrEnum, auto
 from textwrap import TextWrapper
-import tkinter as tk
 from tkinter import ttk
+
 import regex as re
 
-from guiguts.maintext import maintext, HighlightTag
+from guiguts.maintext import HighlightTag, maintext
 from guiguts.preferences import (
-    PrefKey,
-    preferences,
     PersistentBoolean,
     PersistentInt,
     PersistentString,
+    PrefKey,
+    preferences,
 )
-from guiguts.widgets import ToplevelDialog, ToolTip
-from guiguts.utilities import sound_bell, IndexRowCol, is_mac
+from guiguts.utilities import IndexRowCol, is_mac, sound_bell
+from guiguts.widgets import ToolTip, ToplevelDialog
 
 logger = logging.getLogger(__package__)
 

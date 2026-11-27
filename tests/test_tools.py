@@ -3,7 +3,8 @@
 import pytest
 
 from guiguts.application import Guiguts
-from guiguts.html_convert import do_html_autogenerate, HTMLGeneratorDialog
+from guiguts.html_convert import HTMLGeneratorDialog, do_html_autogenerate
+
 from .test_support import run_test
 
 

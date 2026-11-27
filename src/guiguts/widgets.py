@@ -2,22 +2,22 @@
 
 import os.path
 import tkinter as tk
-from tkinter import ttk
-from tkinter import font as tk_font, filedialog
-from typing import Any, Optional, TypeVar, Callable
 import webbrowser
+from tkinter import filedialog, ttk
+from tkinter import font as tk_font
+from typing import Any, Callable, Optional, TypeVar
 
 import darkdetect  # type: ignore[import-untyped]
-from packaging.version import Version
 import regex as re
+from packaging.version import Version
 
 from guiguts.preferences import (
-    preferences,
-    PrefKey,
     PersistentString,
+    PrefKey,
+    preferences,
 )
-from guiguts.root import root, RootWindowState, disable_macos_native_fullscreen
-from guiguts.utilities import is_windows, is_mac, process_accel, cmd_ctrl_string, is_x11
+from guiguts.root import RootWindowState, disable_macos_native_fullscreen, root
+from guiguts.utilities import cmd_ctrl_string, is_mac, is_windows, is_x11, process_accel
 
 NUM_HISTORY = 10
 GLOBAL_FONT_NAME = "global_font"

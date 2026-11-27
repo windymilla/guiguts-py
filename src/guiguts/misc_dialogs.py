@@ -1,59 +1,58 @@
 """Miscellaneous dialogs."""
 
-from datetime import date
 import importlib.resources
-from importlib.metadata import version
 import json
 import logging
 import platform
 import sys
 import tkinter as tk
-from tkinter import ttk, font, messagebox, colorchooser
-from typing import Literal, Optional, Callable
 import unicodedata
 import webbrowser
+from datetime import date
+from importlib.metadata import version
+from tkinter import colorchooser, font, messagebox, ttk
+from typing import Callable, Literal, Optional
 
+import regex as re
 from packaging.version import Version
 from rapidfuzz import process
-import regex as re
 
 from guiguts.data import tips
 from guiguts.file import the_file
 from guiguts.maintext import (
-    maintext,
-    menubar_metadata,
+    ColorKey,
     EntryMetadata,
     KeyboardShortcutsDict,
     StyleDict,
-    ColorKey,
+    maintext,
+    menubar_metadata,
 )
-
 from guiguts.mainwindow import ScrolledReadOnlyText, mainimage
 from guiguts.preferences import (
-    PrefKey,
     PersistentBoolean,
     PersistentInt,
     PersistentString,
+    PrefKey,
     preferences,
 )
 from guiguts.root import root
-from guiguts.utilities import is_mac, is_windows, sound_bell, process_accel, IndexRange
+from guiguts.utilities import IndexRange, is_mac, is_windows, process_accel, sound_bell
 from guiguts.widgets import (
-    ToplevelDialog,
-    ToolTip,
-    insert_in_focus_widget,
-    focus_in_focus_widget,
+    Combobox,
+    FileDialog,
+    Notebook,
     OkApplyCancelDialog,
     OkCancelDialog,
-    mouse_bind,
-    Combobox,
-    Notebook,
-    TreeviewList,
     ScrollableFrame,
-    themed_style,
-    set_global_font,
+    ToolTip,
+    ToplevelDialog,
+    TreeviewList,
+    focus_in_focus_widget,
     get_global_font,
-    FileDialog,
+    insert_in_focus_widget,
+    mouse_bind,
+    set_global_font,
+    themed_style,
 )
 
 logger = logging.getLogger(__package__)

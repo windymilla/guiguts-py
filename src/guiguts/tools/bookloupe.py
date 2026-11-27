@@ -4,15 +4,15 @@
 # was based on https://sourceforge.net/projects/gutcheck
 
 import logging
-from typing import Optional, Any
+from typing import Any, Optional
 
 import regex as re
 import roman  # type: ignore[import-untyped]
 
-from guiguts.checkers import CheckerDialog, CheckerViewOptionsDialog, CheckerFilterText
+from guiguts.checkers import CheckerDialog, CheckerFilterText, CheckerViewOptionsDialog
 from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
-from guiguts.utilities import IndexRange, DiacriticRemover, non_text_line
+from guiguts.utilities import DiacriticRemover, IndexRange, non_text_line
 
 logger = logging.getLogger(__package__)
 

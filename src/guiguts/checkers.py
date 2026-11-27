@@ -1,26 +1,26 @@
 """Support running of checking tools"""
 
-from enum import Enum, IntEnum, StrEnum, auto
 import logging
 import math
 import tkinter as tk
-from tkinter import ttk, messagebox
-from typing import Any, Optional, Callable
+from enum import Enum, IntEnum, StrEnum, auto
+from tkinter import messagebox, ttk
+from typing import Any, Callable, Optional
 
 import regex as re
 
-from guiguts.maintext import maintext, HighlightTag
+from guiguts.maintext import HighlightTag, maintext
 from guiguts.mainwindow import ScrolledReadOnlyText, menubar_metadata
-from guiguts.preferences import PrefKey, preferences, PersistentBoolean
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
 from guiguts.root import root
 from guiguts.utilities import (
-    IndexRowCol,
     IndexRange,
+    IndexRowCol,
+    cmd_ctrl_string,
     is_mac,
     sing_plur,
-    cmd_ctrl_string,
 )
-from guiguts.widgets import ToplevelDialog, TlDlg, mouse_bind, Busy, ToolTip
+from guiguts.widgets import Busy, TlDlg, ToolTip, ToplevelDialog, mouse_bind
 
 logger = logging.getLogger(__package__)
 

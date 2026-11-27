@@ -2,33 +2,33 @@
 
 import logging
 import tkinter as tk
-from tkinter import ttk
-from tkinter import font as tk_font
 import traceback
-from typing import Any, Tuple, Optional, Callable
+from tkinter import font as tk_font
+from tkinter import ttk
+from typing import Any, Callable, Optional, Tuple
 
 import regex as re
 import roman  # type: ignore[import-untyped]
 
 from guiguts.checkers import CheckerDialog, CheckerMatchType
-from guiguts.maintext import maintext, TclRegexCompileError, FindMatch, menubar_metadata
-from guiguts.preferences import preferences, PersistentBoolean, PrefKey, PersistentInt
+from guiguts.maintext import FindMatch, TclRegexCompileError, maintext, menubar_metadata
+from guiguts.preferences import PersistentBoolean, PersistentInt, PrefKey, preferences
 from guiguts.utilities import (
-    sound_bell,
-    IndexRowCol,
     IndexRange,
-    sing_plur,
-    process_accel,
+    IndexRowCol,
     make_anchor,
+    process_accel,
+    sing_plur,
+    sound_bell,
 )
 from guiguts.widgets import (
-    ToplevelDialog,
+    Busy,
     Combobox,
+    ToolTip,
+    ToplevelDialog,
     mouse_bind,
     register_focus_widget,
-    Busy,
     themed_style,
-    ToolTip,
 )
 
 logger = logging.getLogger(__package__)

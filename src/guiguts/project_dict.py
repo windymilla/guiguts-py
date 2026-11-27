@@ -3,6 +3,7 @@
 import json
 import os.path
 from pathlib import Path
+
 from guiguts.utilities import load_dict_from_json, load_wordfile_into_dict
 
 GOOD_WORDS_KEY = "good words"

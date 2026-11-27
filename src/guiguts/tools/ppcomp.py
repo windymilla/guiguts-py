@@ -33,16 +33,16 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 """
 
 import copy
-from collections.abc import Iterator
-from dataclasses import dataclass
 import difflib
-from enum import StrEnum, auto
 import logging
 import os
 import tkinter as tk
-from tkinter import ttk, font, messagebox
-from typing import Optional, Any, cast, TypedDict, Callable
 import warnings
+from collections.abc import Iterator
+from dataclasses import dataclass
+from enum import StrEnum, auto
+from tkinter import font, messagebox, ttk
+from typing import Any, Callable, Optional, TypedDict, cast
 
 import cssselect
 import regex as re
@@ -53,13 +53,13 @@ from guiguts.checkers import CheckerDialog
 from guiguts.file import the_file
 from guiguts.maintext import HighlightTag, maintext
 from guiguts.preferences import (
-    PrefKey,
     PersistentBoolean,
     PersistentString,
+    PrefKey,
     preferences,
 )
-from guiguts.utilities import is_windows, IndexRowCol, IndexRange
-from guiguts.widgets import ToolTip, Busy, PathnameCombobox, FileDialog
+from guiguts.utilities import IndexRange, IndexRowCol, is_windows
+from guiguts.widgets import Busy, FileDialog, PathnameCombobox, ToolTip
 
 logger = logging.getLogger(__package__)
 

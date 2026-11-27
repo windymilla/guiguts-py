@@ -75,7 +75,7 @@ src = ["src"]
 
 [tool.ruff.lint]
 ignore = ["E501"] # Rely on `ruff format` for line length
-select = ["E", "F", "W"]
+select = ["E", "F", "W", "I"]
 extend-select = [
 #    "I",    # isort
 #    "UP",   # pyupgrade

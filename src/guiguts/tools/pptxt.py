@@ -2,15 +2,16 @@
 
 from dataclasses import dataclass
 from tkinter import ttk
-from typing import Dict, Sequence, List, Any
+from typing import Any, Dict, List, Sequence
+
 import regex as re
 
 from guiguts.checkers import CheckerDialog
 from guiguts.file import ProjectDict
 from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
-from guiguts.preferences import preferences, PrefKey, PersistentBoolean
-from guiguts.utilities import IndexRowCol, IndexRange, non_text_line, sing_plur
+from guiguts.preferences import PersistentBoolean, PrefKey, preferences
+from guiguts.utilities import IndexRange, IndexRowCol, non_text_line, sing_plur
 
 
 class PPtxtCheckerDialog(CheckerDialog):

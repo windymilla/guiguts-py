@@ -1,23 +1,23 @@
 """Levenshtein edit distance check tool"""
 
-from enum import IntEnum, auto
 import importlib.resources
 import logging
 import time
-from typing import Any
+from enum import IntEnum, auto
 from tkinter import ttk
+from typing import Any
 
-from Levenshtein import distance
 import regex as re
+from Levenshtein import distance
 
 from guiguts.checkers import CheckerDialog
 from guiguts.data import dictionaries
 from guiguts.file import ProjectDict
 from guiguts.maintext import maintext
 from guiguts.misc_tools import tool_save
-from guiguts.preferences import PersistentInt, PrefKey, preferences, PersistentBoolean
+from guiguts.preferences import PersistentBoolean, PersistentInt, PrefKey, preferences
 from guiguts.spell import get_spell_checker
-from guiguts.utilities import IndexRowCol, IndexRange
+from guiguts.utilities import IndexRange, IndexRowCol
 
 logger = logging.getLogger(__package__)
 

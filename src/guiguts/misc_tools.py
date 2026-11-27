@@ -1,14 +1,14 @@
 """Miscellaneous tools."""
 
-from enum import Enum, StrEnum, auto
 import importlib.resources
 import logging
 import operator
 import tkinter as tk
-from tkinter import ttk, messagebox
-from typing import Callable, Optional, Any, TypeVar
 import unicodedata
 import webbrowser
+from enum import Enum, StrEnum, auto
+from tkinter import messagebox, ttk
+from typing import Any, Callable, Optional, TypeVar
 
 import regex as re
 
@@ -16,42 +16,42 @@ from guiguts.checkers import (
     CheckerDialog,
     CheckerEntry,
     CheckerFilterErrorPrefix,
-    CheckerViewOptionsDialog,
     CheckerMatchType,
+    CheckerViewOptionsDialog,
 )
-from guiguts.data import scannos, regex_library
+from guiguts.data import regex_library, scannos
 from guiguts.file import the_file
 from guiguts.maintext import maintext, menubar_metadata
 from guiguts.preferences import (
-    PrefKey,
-    PersistentString,
-    preferences,
     PersistentBoolean,
+    PersistentString,
+    PrefKey,
+    preferences,
 )
 from guiguts.search import (
+    SearchDialog,
     get_regex_replacement,
     message_from_regex_exception,
-    SearchDialog,
 )
 from guiguts.utilities import (
-    IndexRowCol,
     IndexRange,
+    IndexRowCol,
     cmd_ctrl_string,
+    is_debug,
     is_mac,
     is_windows,
-    sound_bell,
     load_dict_from_json,
-    is_debug,
+    sound_bell,
 )
 from guiguts.widgets import (
-    ToplevelDialog,
-    PathnameCombobox,
-    insert_in_focus_widget,
-    ToolTip,
-    FileDialog,
-    get_global_font,
-    themed_style,
     Busy,
+    FileDialog,
+    PathnameCombobox,
+    ToolTip,
+    ToplevelDialog,
+    get_global_font,
+    insert_in_focus_widget,
+    themed_style,
 )
 
 logger = logging.getLogger(__package__)

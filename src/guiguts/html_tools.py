@@ -1,61 +1,61 @@
 """Tools relating to HTML."""
 
-from enum import StrEnum
 import gzip
-from html.parser import HTMLParser
 import io
 import logging
 import os
-from pathlib import Path
-import subprocess
-import tkinter as tk
-from tkinter import ttk
-from typing import Optional, Any, Callable
-import xml.sax
 import shutil
+import subprocess
 import threading
+import tkinter as tk
 import webbrowser
+import xml.sax
 import zipfile
+from enum import StrEnum
+from html.parser import HTMLParser
+from pathlib import Path
+from tkinter import ttk
+from typing import Any, Callable, Optional
 
-from PIL import Image, ImageTk, UnidentifiedImageError
 import regex as re
 import requests
 import roman  # type: ignore[import-untyped]
+from PIL import Image, ImageTk, UnidentifiedImageError
 
 from guiguts.checkers import CheckerDialog, CheckerEntry, CheckerEntrySeverity
 from guiguts.file import the_file
 from guiguts.html_convert import make_anchor_id
-from guiguts.maintext import maintext, menubar_metadata, HighlightTag
+from guiguts.maintext import HighlightTag, maintext, menubar_metadata
 from guiguts.page_details import (
-    PageDetail,
-    PageDetails,
     STYLE_ARABIC,
     STYLE_ROMAN,
+    PageDetail,
+    PageDetails,
 )
 from guiguts.preferences import (
-    PersistentString,
     PersistentBoolean,
+    PersistentString,
     PrefKey,
     preferences,
 )
 from guiguts.utilities import (
-    IndexRange,
-    sound_bell,
     DiacriticRemover,
+    IndexRange,
     IndexRowCol,
     folder_dir_str,
     is_windows,
     make_anchor,
+    sound_bell,
 )
 from guiguts.widgets import (
-    ToplevelDialog,
     Busy,
     Combobox,
-    ToolTip,
-    TreeviewList,
-    mouse_bind,
-    grab_focus,
     FileDialog,
+    ToolTip,
+    ToplevelDialog,
+    TreeviewList,
+    grab_focus,
+    mouse_bind,
 )
 
 logger = logging.getLogger(__package__)

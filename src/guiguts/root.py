@@ -2,18 +2,18 @@
 
 import ctypes
 import ctypes.util
+import logging
+import tkinter as tk
+import traceback
 from enum import StrEnum, auto
 from functools import cache
-import logging
-import traceback
-import tkinter as tk
 from tkinter import ttk
-
 from types import TracebackType
 from typing import Any, Optional
+
 from ttkthemes import ThemedTk
 
-from guiguts.preferences import preferences, PrefKey
+from guiguts.preferences import PrefKey, preferences
 from guiguts.utilities import is_mac, is_x11
 
 logger = logging.getLogger(__package__)

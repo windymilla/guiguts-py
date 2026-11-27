@@ -2,30 +2,31 @@
 
 import importlib.resources
 import logging
-from pathlib import Path
 import tkinter as tk
+from pathlib import Path
 from tkinter import ttk
-from typing import Callable, Optional, Any
+from typing import Any, Callable, Optional
+
+import regex as re
 from rapidfuzz import process
 from rapidfuzz.distance import Levenshtein
-import regex as re
 
+from guiguts.checkers import CheckerDialog, CheckerEntry, CheckerMatchType
 from guiguts.data import dictionaries
 from guiguts.file import ProjectDict, the_file
-from guiguts.checkers import CheckerDialog, CheckerEntry, CheckerMatchType
-from guiguts.maintext import maintext, FindMatch
+from guiguts.maintext import FindMatch, maintext
 from guiguts.misc_tools import tool_save
-from guiguts.preferences import preferences, PersistentInt, PrefKey, PersistentString
+from guiguts.preferences import PersistentInt, PersistentString, PrefKey, preferences
 from guiguts.utilities import (
-    IndexRowCol,
     IndexRange,
-    load_wordfile_into_dict,
+    IndexRowCol,
     cmd_ctrl_string,
-    process_accel,
-    non_text_line,
     is_test,
+    load_wordfile_into_dict,
+    non_text_line,
+    process_accel,
 )
-from guiguts.widgets import ToolTip, mouse_bind, Combobox
+from guiguts.widgets import Combobox, ToolTip, mouse_bind
 
 logger = logging.getLogger(__package__)
 
