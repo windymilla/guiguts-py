@@ -19,7 +19,9 @@ from .test_support import run_test
     ],
 )
 def test_spellcheck_output(
-    guiguts_app: Guiguts, base_in: str, base_exp: str  # pylint: disable=unused-argument
+    guiguts_app: Guiguts,  # pylint: disable=unused-argument
+    base_in: str,
+    base_exp: str,
 ) -> None:
     """Test the spellchecker."""
     run_test(
@@ -42,7 +44,9 @@ def test_spellcheck_output(
     ],
 )
 def test_jeebies_output(
-    guiguts_app: Guiguts, base_in: str, base_exp: str  # pylint: disable=unused-argument
+    guiguts_app: Guiguts,  # pylint: disable=unused-argument
+    base_in: str,
+    base_exp: str,
 ) -> None:
     """Test Jeebies."""
     run_test(
@@ -61,7 +65,9 @@ def test_jeebies_output(
     ],
 )
 def test_pptxt_output(
-    guiguts_app: Guiguts, base_in: str, base_exp: str  # pylint: disable=unused-argument
+    guiguts_app: Guiguts,  # pylint: disable=unused-argument
+    base_in: str,
+    base_exp: str,
 ) -> None:
     """Test PPtxt."""
     run_test(
@@ -80,7 +86,9 @@ def test_pptxt_output(
     ],
 )
 def test_pphtml_output(
-    guiguts_app: Guiguts, base_in: str, base_exp: str  # pylint: disable=unused-argument
+    guiguts_app: Guiguts,  # pylint: disable=unused-argument
+    base_in: str,
+    base_exp: str,
 ) -> None:
     """Test PPhtml."""
     run_test(

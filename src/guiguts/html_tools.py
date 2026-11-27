@@ -1167,7 +1167,7 @@ class HTMLValidator:
             except KeyError:
                 line = "Data error - no message found"
             try:
-                error_type = f'{message["type"].upper()}: '
+                error_type = f"{message['type'].upper()}: "
             except KeyError:
                 error_type = ""
 
@@ -2680,8 +2680,10 @@ class HTMLMarkupDialog(ToplevelDialog):
                 ttk.Button(
                     markup_frame,
                     text=f"<{markup}>",
-                    command=lambda attr_key=attr_key, markup=markup, cbx=cbx: self.add_custom_markup(  # type: ignore[misc]
-                        attr_key, markup, cbx
+                    command=lambda attr_key=attr_key, markup=markup, cbx=cbx: (
+                        self.add_custom_markup(  # type: ignore[misc]
+                            attr_key, markup, cbx
+                        )
                     ),
                 ).grid(
                     row=first_row + row,

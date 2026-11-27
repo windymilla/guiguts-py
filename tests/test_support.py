@@ -49,6 +49,6 @@ def run_test(
     else:
         failed_output_file.parent.mkdir(parents=True, exist_ok=True)
         failed_output_file.write_text(actual_output, encoding="utf-8")
-        assert (
-            actual_output == expected_output
-        ), f"Output mismatch. See: {failed_output_file}"
+        assert actual_output == expected_output, (
+            f"Output mismatch. See: {failed_output_file}"
+        )

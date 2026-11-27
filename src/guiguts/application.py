@@ -687,7 +687,9 @@ class Guiguts:
                     (
                         'start "$f"'
                         if is_windows()
-                        else 'open "$f"' if is_mac() else 'xdg-open "$f"'
+                        else 'open "$f"'
+                        if is_mac()
+                        else 'xdg-open "$f"'
                     ),
                 ],
                 ["Onelook.com (several dictionaries)", "https://www.onelook.com/?w=$t"],
@@ -1641,9 +1643,7 @@ class Guiguts:
                 )
             else:
                 # Or just reconfigure the metadata entry and the menu button
-                self.recent_menu.entries[count].label = (
-                    f"~{count + 1}: {file_list[count]}"
-                )
+                self.recent_menu.entries[count].label = f"~{count + 1}: {file}"
                 self.recent_menu.entries[count].command = (  # type: ignore[attr-defined]
                     lambda fn=file: self.open_file(fn),
                 )  # type: ignore[misc]

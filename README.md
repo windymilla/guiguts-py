@@ -338,10 +338,10 @@ poetry env use /usr/local/bin/python3
 
 Guiguts 2 uses [flake8](https://pypi.org/project/flake8) and
 [pylint](https://www.pylint.org) for static code analysis, and
-[black](https://pypi.org/project/black) for consistent styling.  All use default
+[ruff](https://pypi.org/project/ruff/) for consistent styling.  All use default
 settings, with the exception of maximum line length checking which is adjusted
 in the recommended manner (using the `.flake8` file and the `tool.pylint`
-section of `pyproject.toml`) to avoid conflicts with black.
+section of `pyproject.toml`) to avoid conflicts with ruff.
 
 All of the above tools will be installed via `poetry` as described above.
 
@@ -349,7 +349,7 @@ All of the above tools will be installed via `poetry` as described above.
 
 `poetry run pylint --recursive y .` will check all `src` & `tests` python files.
 
-`poetry run black .` will reformat all `src` & `tests` python files where necessary.
+`poetry run ruff format .` will reformat all `src` & `tests` python files where necessary.
 
 This project uses Github Actions to ensure none of the above tools report any
 error.
@@ -373,8 +373,7 @@ types are used incorrectly.
 It is not intended that every variable should have its type annotated, but developers
 are encouraged to add type hints to function definitions, e.g.
 ```python
-def myfunc(num: int) -> str:
-    ...
+def myfunc(num: int) -> str: ...
 ```
 Note that functions without type annotation will not be type checked. The
 [type hints cheat sheet](https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html)

@@ -195,7 +195,6 @@ class CheckerViewOptionsDialog(ToplevelDialog):
             wgt.focus()
 
         for row, option_filter in enumerate(self.checker_dialog.view_options_filters):
-
             check_var = tk.BooleanVar(value=option_filter.on)
 
             btn = ttk.Checkbutton(
@@ -1618,7 +1617,9 @@ class CheckerDialog(ToplevelDialog):
         process_remove = (
             "process & remove"
             if process_bool and remove
-            else "process" if process_bool else "remove"
+            else "process"
+            if process_bool
+            else "remove"
         )
         if count <= 1000 or messagebox.askyesno(
             title="Bulk processing",

@@ -772,10 +772,12 @@ class PreferencesDialog(ToplevelDialog):
             desc.grid(row=row, column=0, sticky="NSEW", padx=2, pady=2)
             desc.insert("1.0", self.color_settings[key].description)
             desc.bind(
-                "<Enter>", lambda _, desc=desc: desc.see("1.0")  # type: ignore[misc]
+                "<Enter>",
+                lambda _, desc=desc: desc.see("1.0"),  # type: ignore[misc]
             )
             desc.bind(
-                "<Leave>", lambda _, desc=desc: desc.see("1.0")  # type: ignore[misc]
+                "<Leave>",
+                lambda _, desc=desc: desc.see("1.0"),  # type: ignore[misc]
             )
             desc.tag_configure(sample_tag_name, style_dict)
             desc.tag_add(sample_tag_name, "1.0", "1.end")
@@ -978,7 +980,7 @@ class HelpAboutDialog(ToplevelDialog):
             tk.END,
             f"""Guiguts - an application to support creation of ebooks for PG
 
-Guiguts version: {version('guiguts')}
+Guiguts version: {version("guiguts")}
 
 Python version: {sys.version}
 Tk/Tcl version: {root().call("info", "patchlevel")}
@@ -2150,9 +2152,7 @@ class CommandPaletteDialog(ToplevelDialog):
                 score = RecentPlusEntry.MENUMATCH  # strong menu prefix
             else:  # fallback to fuzzy match
                 score = int(
-                    process.extractOne(search_text, [f"{menu_lower} {label_lower}"])[
-                        1
-                    ]  # type: ignore[index]
+                    process.extractOne(search_text, [f"{menu_lower} {label_lower}"])[1]  # type: ignore[index]
                 )
             return score
 

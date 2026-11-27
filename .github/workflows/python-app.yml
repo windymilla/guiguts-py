@@ -32,9 +32,9 @@ jobs:
     - name: Lint with pylint
       run: |
         poetry run pylint --recursive y .
-    - name: Check format with black
+    - name: Check format with ruff
       run: |
-        poetry run black --check --verbose .
+        poetry run ruff format --check .
     - name: Static type check with mypy
       run: |
         poetry run mypy --disallow-untyped-defs -p guiguts

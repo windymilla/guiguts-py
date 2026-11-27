@@ -6116,7 +6116,6 @@ class MenubarMetadata:
         for key, shortcut in shortcuts_dict.items():
             label, parent_label = shortcuts_dict.labels_from_key(key)
             for command in all_commands:
-
                 if (
                     command.display_label() == label
                     and command.display_parent_label() == parent_label
@@ -6169,8 +6168,8 @@ class TearOffMenuDialog(ToplevelDialog):
                     text=f"{process_label(entry.label)[1]}   ▸",
                     style="TearOff.TButton",
                 )
-                submenu_btn["command"] = (
-                    lambda btn=submenu_btn, data=entry: self.show_submenu(btn, data)
+                submenu_btn["command"] = lambda btn=submenu_btn, data=entry: (
+                    self.show_submenu(btn, data)
                 )
                 submenu_btn.grid(row=row, column=0, sticky="NSEW")
                 row += 1
@@ -6187,8 +6186,10 @@ class TearOffMenuDialog(ToplevelDialog):
                     self.top_frame,
                     text=process_label(entry.label.removesuffix(" (toggle)"))[1],
                     variable=PersistentBoolean(entry.pref_key),
-                    command=lambda k=entry.pref_key, c_on=entry.command_on, c_off=entry.command_off: Menu.checkbox_clicked(  # type: ignore[misc]
-                        k, c_on, c_off
+                    command=lambda k=entry.pref_key, c_on=entry.command_on, c_off=entry.command_off: (
+                        Menu.checkbox_clicked(  # type: ignore[misc]
+                            k, c_on, c_off
+                        )
                     ),
                 ).grid(row=row, column=0, sticky="NSEW")
                 row += 1

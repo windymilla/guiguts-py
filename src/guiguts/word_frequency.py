@@ -1165,9 +1165,11 @@ class WordFrequencyDialog(CheckerDialog):
         """Populate the WF dialog with the list of all ALLCAPS words, excluding single characters."""
         self.wf_populate_by_match(
             "ALLCAPS",
-            lambda word: len(word) > 1
-            and re.search(r"\p{IsUpper}", word)
-            and not re.search(r"\p{IsLower}", word),
+            lambda word: (
+                len(word) > 1
+                and re.search(r"\p{IsUpper}", word)
+                and not re.search(r"\p{IsLower}", word)
+            ),
         )
 
     def wf_populate_mixedcase(self) -> None:
@@ -1180,13 +1182,15 @@ class WordFrequencyDialog(CheckerDialog):
         word_chunk_regex = r"\p{Upper}?[\p{Lower}\p{Mark}\d'’*-]*"
         self.wf_populate_by_match(
             "MiXeD CasE",
-            lambda word: re.search(r"\p{Upper}", word)
-            and re.search(r"\p{Lower}", word)
-            and not re.fullmatch(
-                rf"{word_chunk_regex}([-'’\.]{word_chunk_regex})*",
-                word,
-            )
-            and not re.match(r"Ma?c\p{Upper}", word),
+            lambda word: (
+                re.search(r"\p{Upper}", word)
+                and re.search(r"\p{Lower}", word)
+                and not re.fullmatch(
+                    rf"{word_chunk_regex}([-'’\.]{word_chunk_regex})*",
+                    word,
+                )
+                and not re.match(r"Ma?c\p{Upper}", word)
+            ),
         )
 
     def wf_populate_initialcaps(self) -> None:

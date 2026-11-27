@@ -133,7 +133,7 @@ for page, page_html in pages:
         # Add an entry for each small connecting word.
         for i, word in enumerate(words):
             if 0 < i < len(words) - 1 and word.lower() in INDEX_SPLIT_WORDS:
-                index_text = f"{' '.join(words[i + 1:])}, {' '.join(words[:i + 1])}"
+                index_text = f"{' '.join(words[i + 1 :])}, {' '.join(words[: i + 1])}"
                 add_heading(index_text, page)
 
 # Sort alphabetically by heading text

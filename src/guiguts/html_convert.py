@@ -1619,7 +1619,7 @@ def html_add_chapter_divs() -> None:
     enclose pagenum spans where appropriate."""
     h2_end = "1.0"
     while h2_start := maintext().search("  <h2", h2_end, tk.END):
-        h2_end = f'{maintext().search("</h2>", h2_start, tk.END)} lineend'
+        h2_end = f"{maintext().search('</h2>', h2_start, tk.END)} lineend"
         prev_page_break = maintext().search(
             '<span class="pagenum"', h2_start, "1.0", backwards=True
         )

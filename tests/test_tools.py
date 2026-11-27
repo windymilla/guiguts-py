@@ -15,7 +15,9 @@ from .test_support import run_test
     ],
 )
 def test_htmlconvert_output(
-    guiguts_app: Guiguts, base_in: str, base_exp: str  # pylint: disable=unused-argument
+    guiguts_app: Guiguts,  # pylint: disable=unused-argument
+    base_in: str,
+    base_exp: str,
 ) -> None:
     """Test the HTML conversion tool."""
 
