@@ -38,11 +38,11 @@ import logging
 import os
 import tkinter as tk
 import warnings
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from tkinter import font, messagebox, ttk
-from typing import Any, Callable, Optional, TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import cssselect
 import regex as re
@@ -615,7 +615,7 @@ def tokenize_with_lines(text: str) -> list[Token]:
 
 def token_span_to_lines(
     tokens: list[Token], i1: int, i2: int, offset: int
-) -> Optional[tuple[int, int]]:
+) -> tuple[int, int] | None:
     """Map token spans back to line numbers."""
     if i1 == i2:
         return None
@@ -626,7 +626,7 @@ def token_span_to_lines(
 
 def aligned_tokens(
     tok_list_a: list[Token], tok_list_b: list[Token]
-) -> Iterator[tuple[Optional[Token], Optional[Token]]]:
+) -> Iterator[tuple[Token | None, Token | None]]:
     """Check type of change and yield tokens."""
     sm = difflib.SequenceMatcher(
         a=[t.text for t in tok_list_a], b=[t.text for t in tok_list_b], autojunk=False
@@ -1088,14 +1088,14 @@ class PgdpFile:
         """
         self.basename = os.path.basename(filename)
         try:
-            with open(filename, "r", encoding="utf-8") as file:
+            with open(filename, encoding="utf-8") as file:
                 self.text = file.read()
                 # remove BOM on first line if present
                 t = ":".join(f"{ord(c):x}" for c in self.text[0])
                 if t[0:4] == "feff":
                     self.text = self.text[1:]
         except UnicodeError:
-            with open(filename, "r", encoding="latin-1") as file:
+            with open(filename, encoding="latin-1") as file:
                 self.text = file.read()
         except FileNotFoundError as ex:
             raise FileNotFoundError("Cannot load file: " + filename) from ex
@@ -1349,7 +1349,7 @@ class PgdpFileText(PgdpFile):
         footnotes, new_text = [], []
         current_block = None
 
-        new_block: Optional[list[Any]]
+        new_block: list[Any] | None
         for new_block, empty_lines in self.get_block():
             next_fn_type = 0
             if new_block:
@@ -1422,7 +1422,7 @@ class PgdpFileHtml(PgdpFile):
 
     def __init__(self) -> None:
         super().__init__()
-        self.tree: Optional[etree._ElementTree] = None
+        self.tree: etree._ElementTree | None = None
         self.mycss = ""
 
     def parse_html5(self) -> tuple[etree._ElementTree, list]:
@@ -1583,7 +1583,7 @@ class PgdpFileHtml(PgdpFile):
         self.remove_wordjoin()
 
     @staticmethod
-    def _text_transform(val: Any, errors: list) -> Optional[Callable[[Any], Any]]:
+    def _text_transform(val: Any, errors: list) -> Callable[[Any], Any] | None:
         """Transform smcaps"""
         if len(val.value) != 1:
             errors += [(val.line, val.column, val.name + " takes 1 argument")]
@@ -1610,7 +1610,7 @@ class PgdpFileHtml(PgdpFile):
         return None
 
     @staticmethod
-    def _text_replace(val: Any, errors: list) -> Optional[Callable[[Any], Any]]:
+    def _text_replace(val: Any, errors: list) -> Callable[[Any], Any] | None:
         """Skip S (spaces) tokens"""
         values = [v for v in val.value if v.type != "S"]
         if len(values) != 2:
@@ -1619,7 +1619,7 @@ class PgdpFileHtml(PgdpFile):
         return lambda x: x.replace(values[0].value, values[1].value)
 
     @staticmethod
-    def _text_move(val: Any, errors: list) -> Optional[list]:
+    def _text_move(val: Any, errors: list) -> list | None:
         """Move a node"""
         values = [v for v in val.value if v.type != "S"]
         if len(values) < 1:

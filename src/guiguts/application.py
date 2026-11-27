@@ -9,7 +9,6 @@ import tkinter as tk
 import unicodedata
 import webbrowser
 from importlib.metadata import version
-from typing import Optional
 
 import darkdetect  # type: ignore[import-untyped]
 from packaging.version import Version
@@ -170,7 +169,7 @@ DEBUG_FORMAT = "%(asctime)s: %(levelname)s - %(filename)s:%(lineno)d - %(message
 class Guiguts:
     """Top level Guiguts application."""
 
-    def __init__(self, args: Optional[list[str]] = None) -> None:
+    def __init__(self, args: list[str] | None = None) -> None:
         """Initialize Guiguts class.
 
         Creates windows and sets default preferences."""
@@ -199,9 +198,9 @@ class Guiguts:
         self.update_title()
 
         # Recent menu is saved to allow deletion & re-creation when files loaded/saved
-        self.recent_menu: Optional[MenuMetadata] = None
+        self.recent_menu: MenuMetadata | None = None
         # Similarly for custom menu when it is customized
-        self.custom_menu: Optional[MenuMetadata] = None
+        self.custom_menu: MenuMetadata | None = None
         self.init_menus()
 
         self.init_statusbar(statusbar())
@@ -239,7 +238,7 @@ class Guiguts:
 
         # Don't pop startup dialogs if debug flag given (for tester's sake!)
         if not is_debug():
-            dlg: Optional[ToplevelDialog] = None
+            dlg: ToplevelDialog | None = None
             # If user hasn't seen the current (or later!) release notes, show them
             ver = version("guiguts")
             if Version(ver) > Version(preferences.get(PrefKey.RELEASE_NOTES_SHOWN)):
@@ -254,7 +253,7 @@ class Guiguts:
                 dlg.after_idle(dlg.lift)
                 dlg.after_idle(dlg.focus_set)
 
-    def parse_args(self, args: Optional[list[str]] = None) -> None:
+    def parse_args(self, args: list[str] | None = None) -> None:
         """Parse command line args"""
         if args is None:
             args = sys.argv[1:]
@@ -1770,7 +1769,7 @@ class Guiguts:
             "languages label", StatusBar.BTN_1, self.file.set_languages
         )
 
-        def ordinal_name_display(force: Optional[bool] = None) -> None:
+        def ordinal_name_display(force: bool | None = None) -> None:
             """Set, unset, or toggle, name display in ordinal button.
 
             Args:

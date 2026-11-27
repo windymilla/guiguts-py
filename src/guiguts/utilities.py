@@ -7,10 +7,11 @@ import logging
 import os.path
 import platform
 import subprocess
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from tkinter import _tkinter  # type: ignore[attr-defined]
-from typing import Any, Callable, Mapping, Optional
+from typing import Any
 from unicodedata import combining, normalize
 
 import regex as re
@@ -114,7 +115,7 @@ def _is_system(system: str) -> bool:
     return my_system == system
 
 
-def load_dict_from_json(filename: str) -> Optional[dict[str, Any]]:
+def load_dict_from_json(filename: str) -> dict[str, Any] | None:
     """If file exists, attempt to load into dict.
 
     Args:
@@ -124,7 +125,7 @@ def load_dict_from_json(filename: str) -> Optional[dict[str, Any]]:
         Dictionary if loaded successfully, or None.
     """
     if os.path.isfile(filename):
-        with open(filename, "r", encoding="utf-8") as fp:
+        with open(filename, encoding="utf-8") as fp:
             try:
                 return json.load(fp)
             except json.decoder.JSONDecodeError as exc:
@@ -174,7 +175,7 @@ class IndexRowCol:
     col: int
 
     def __init__(
-        self, index_or_row: _tkinter.Tcl_Obj | str | int, col: Optional[int] = None
+        self, index_or_row: _tkinter.Tcl_Obj | str | int, col: int | None = None
     ) -> None:
         """Construct index either from string or two ints.
 
@@ -772,7 +773,7 @@ def is_debug() -> bool:
     return logger.getEffectiveLevel() == logging.DEBUG
 
 
-def is_test(testing: Optional[bool] = None) -> bool:
+def is_test(testing: bool | None = None) -> bool:
     """Set or query whether in test mode."""
     global _CALLED_FROM_TEST
     if testing is not None:

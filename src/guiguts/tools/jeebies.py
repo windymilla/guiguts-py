@@ -4,7 +4,7 @@ import importlib.resources
 import logging
 from enum import StrEnum, auto
 from tkinter import ttk
-from typing import Any, List
+from typing import Any
 
 import regex as re
 
@@ -201,7 +201,7 @@ class JeebiesChecker:
 
         checker_dialog.display_entries()
 
-    def build_paragraph_structures(self) -> tuple[List, List, List, List]:
+    def build_paragraph_structures(self) -> tuple[list, list, list, list]:
         """Make the paragraph strings and the ancillary lists that allow
         us to map a hebe in a paragraph string to its actual line/col
         position in the file.
@@ -222,7 +222,7 @@ class JeebiesChecker:
         # List of line boundaries for current paragraph. Used only within
         # the function and is refreshed for each new paragraph. Contents
         # will be appended to paragraph_line_boundaries list (see above).
-        paragraph_line_ends: List[int] = []
+        paragraph_line_ends: list[int] = []
 
         prev_line_was_blank = True
         line_number = 1

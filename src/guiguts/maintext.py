@@ -4,12 +4,13 @@ import copy
 import logging
 import subprocess
 import tkinter as tk
+from collections.abc import Callable, Generator
 from enum import StrEnum, auto
 from html.parser import HTMLParser
 from idlelib.redirector import WidgetRedirector  # type: ignore[import-not-found, import-untyped]
 from tkinter import Text, messagebox, ttk
 from tkinter import font as tk_font
-from typing import Any, Callable, Generator, Literal, Optional
+from typing import Any, Literal, Optional
 
 import regex as re
 
@@ -262,7 +263,7 @@ class TextLineNumbers(tk.Canvas):
         if is_mac():
             pending_x: float = 0.0
             pending_y: float = 0.0
-            after_id: Optional[str] = None
+            after_id: str | None = None
 
             def to_signed_16(n: int) -> int:
                 return n if n < 0x8000 else n - 0x10000
@@ -599,7 +600,7 @@ class ConfigurableColor:
         description: str,
         dark: StyleDict,
         light: StyleDict,
-        update_func: Optional[Callable[[ColorKey], None]] = None,
+        update_func: Callable[[ColorKey], None] | None = None,
     ) -> None:
         """Initialize a configurable color.
 
@@ -912,7 +913,7 @@ class MainText(tk.Text):
         self.peer_vscroll.grid(column=2, row=1, sticky="NS")
         self.peer["yscrollcommand"] = peer_vscroll_set
 
-        self.text_peer_focus: "MainText" | TextPeer = self
+        self.text_peer_focus: MainText | TextPeer = self
 
         # Track whether main text or peer most recently had focus
         def text_peer_focus_track(event: tk.Event) -> None:
@@ -978,8 +979,8 @@ class MainText(tk.Text):
         self.drag_start_index = ""  # Index of start of text
         self.drag_start_click = (-1, -1)  # Coordinates of initial click
         self.drag_text = ""  # Text being dragged
-        self.drag_window: Optional[tk.Toplevel] = None  # Window to drag
-        self.drag_copy_label: Optional[tk.Label] = None  # Label in window
+        self.drag_window: tk.Toplevel | None = None  # Window to drag
+        self.drag_copy_label: tk.Label | None = None  # Label in window
         self.bind_event(
             "<ButtonPress-1>", self.start_drag_sel, add=True, bind_peer=True
         )
@@ -1437,7 +1438,7 @@ class MainText(tk.Text):
             ) -> Callable[[tk.Event], str]:
                 pending_x: float = 0.0
                 pending_y: float = 0.0
-                after_id: Optional[str] = None
+                after_id: str | None = None
 
                 def _flush() -> None:
                     nonlocal pending_x, pending_y, after_id
@@ -1532,7 +1533,7 @@ class MainText(tk.Text):
     def bind_event(
         self,
         event_string: str,
-        func: Callable[[tk.Event], Optional[str]],
+        func: Callable[[tk.Event], str | None],
         add: bool = False,
         force_break: bool = True,
         bind_all: bool = False,
@@ -1842,11 +1843,11 @@ class MainText(tk.Text):
         warnings = []
         self.delete("1.0", tk.END)
         try:
-            with open(fname, "r", encoding="utf-8") as fh:
+            with open(fname, encoding="utf-8") as fh:
                 self.insert(tk.END, maintext().reverse_rtl(fh.read()))
         except UnicodeDecodeError:
             warnings.append("Unable to open as UTF-8, so opened as ISO-8859-1.")
-            with open(fname, "r", encoding="iso-8859-1") as fh:
+            with open(fname, encoding="iso-8859-1") as fh:
                 self.insert(tk.END, fh.read())
         # Remove BOM from first line if present
         if bom_match := self.find_match(
@@ -1964,7 +1965,7 @@ class MainText(tk.Text):
         insert_pos: IndexRowCol,
         focus: bool = True,
         focus_widget: Optional["MainText | TextPeer"] = None,
-        see_end_rowcol: Optional[IndexRowCol] = None,
+        see_end_rowcol: IndexRowCol | None = None,
         top_of_page: bool = False,
         store_location: bool = True,
     ) -> None:
@@ -2189,9 +2190,7 @@ class MainText(tk.Text):
                 self.prev_sel_ranges = self.current_sel_ranges.copy()
             self.current_sel_ranges = ranges.copy()
 
-    def restore_selection_ranges(
-        self, ranges: Optional[list[IndexRange]] = None
-    ) -> None:
+    def restore_selection_ranges(self, ranges: list[IndexRange] | None = None) -> None:
         """Restore previous selection ranges.
 
         Args:
@@ -3009,7 +3008,7 @@ class MainText(tk.Text):
         nocase: bool = False,
         regexp: bool = False,
         backwards: bool = False,
-    ) -> Optional[FindMatch]:
+    ) -> FindMatch | None:
         """Find occurrence of string/regex in given range.
 
         Args:
@@ -3119,7 +3118,7 @@ class MainText(tk.Text):
         regexp: bool,
         backwards: bool,
         wrap: bool,
-    ) -> Optional[FindMatch]:
+    ) -> FindMatch | None:
         """Find occurrence of string/regex in file by slurping text into string.
         Called for user searches - regexps are Python flavor.
 
@@ -3209,7 +3208,7 @@ class MainText(tk.Text):
         slurp_range: IndexRange,
         nocase: bool,
         wholeword: bool,
-    ) -> Optional[FindMatch]:
+    ) -> FindMatch | None:
         """Find last match in given range.
 
         This is used instead of searching backwards if regex contains backreference,
@@ -3252,7 +3251,7 @@ class MainText(tk.Text):
         regexp: bool,
         wholeword: bool,
         backwards: bool,
-    ) -> tuple[Optional[FindMatch], int]:
+    ) -> tuple[FindMatch | None, int]:
         """Find occurrence of regex in text range using slurped text, and also
         where it is in the slurp text.
 
@@ -3362,9 +3361,9 @@ class MainText(tk.Text):
         self,
         find_range: IndexRange,
         search_string: str,
-        regexp: Optional[bool] = None,
-        wholeword: Optional[bool] = None,
-        nocase: Optional[bool] = None,
+        regexp: bool | None = None,
+        wholeword: bool | None = None,
+        nocase: bool | None = None,
     ) -> list[FindMatch]:
         """Find all matches in given range.
 
@@ -4037,9 +4036,9 @@ class MainText(tk.Text):
 
     def wrap_interpret_margins(
         self,
-        match_left: Optional[str],
-        match_first: Optional[str],
-        match_right: Optional[str],
+        match_left: str | None,
+        match_first: str | None,
+        match_right: str | None,
         default_left: int,
         default_first: int,
         default_right: int,
@@ -4067,7 +4066,7 @@ class MainText(tk.Text):
 
     def wrap_interpret_single_margin(
         self,
-        match_group: Optional[str],
+        match_group: str | None,
         default_value: int,
     ) -> int:
         """Interpret single margin from markup, e.g. `/*[6]`.
@@ -5399,7 +5398,7 @@ class TclRegexCompileError(Exception):
 _THE_MAINTEXT = None
 
 
-def maintext(text_widget: Optional[MainText] = None) -> MainText:
+def maintext(text_widget: MainText | None = None) -> MainText:
     """Store and return the single MainText widget"""
     global _THE_MAINTEXT
     if text_widget is not None:
@@ -5574,7 +5573,7 @@ class ScrolledReadOnlyText(tk.Text):
         )
         self.see(f"{line_num}.0")
 
-    def get_select_line_num(self) -> Optional[int]:
+    def get_select_line_num(self) -> int | None:
         """Get the line number of the currently selected line.
 
         Returns:
@@ -5660,8 +5659,8 @@ class Menu(tk.Menu):
         self,
         label: str,
         bool_var: PersistentBoolean,
-        handler_on: Optional[Callable[[], None]] = None,
-        handler_off: Optional[Callable[[], None]] = None,
+        handler_on: Callable[[], None] | None = None,
+        handler_off: Callable[[], None] | None = None,
         accel: str = "",
     ) -> None:
         """Add a checkbox to the menu.
@@ -5698,8 +5697,8 @@ class Menu(tk.Menu):
     def checkbox_clicked(
         cls,
         pref_key: PrefKey,
-        handler_on: Optional[Callable[[], None]] = None,
-        handler_off: Optional[Callable[[], None]] = None,
+        handler_on: Callable[[], None] | None = None,
+        handler_off: Callable[[], None] | None = None,
     ) -> None:
         """Callback when checkbox is clicked.
 
@@ -5715,8 +5714,8 @@ class Menu(tk.Menu):
     def bind_checkbox(
         cls,
         pref_key: PrefKey,
-        handler_on: Optional[Callable[[], None]] = None,
-        handler_off: Optional[Callable[[], None]] = None,
+        handler_on: Callable[[], None] | None = None,
+        handler_off: Callable[[], None] | None = None,
         accel: str = "",
     ) -> None:
         """Bind callback to shortcut."""
@@ -5865,8 +5864,8 @@ class CheckbuttonMetadata(EntryMetadata):
         parent_label: str,
         shortcut: str,
         pref_key: PrefKey,
-        command_on: Optional[Callable],
-        command_off: Optional[Callable],
+        command_on: Callable | None,
+        command_off: Callable | None,
     ) -> None:
         """Initialize CheckboxMetadata."""
         super().__init__(f"{label} (toggle)", parent_label, shortcut)
@@ -5906,7 +5905,7 @@ class MenuMetadata(EntryMetadata):
         super().__init__(label, parent_label, "")
         self.entries: list[EntryMetadata] = []
         # Not easy to navigate actual tk menu structure, so store tk Menu here
-        self.tk_menu: Optional[tk.Menu] = None
+        self.tk_menu: tk.Menu | None = None
 
     def add_submenu(self, label: str) -> "MenuMetadata":
         """Add a submenu to this menu & return it.
@@ -5961,8 +5960,8 @@ class MenuMetadata(EntryMetadata):
         self,
         label: str,
         pref_key: PrefKey,
-        callback_on: Optional[Callable] = None,
-        callback_off: Optional[Callable] = None,
+        callback_on: Callable | None = None,
+        callback_off: Callable | None = None,
         accel: str = "",
     ) -> None:
         """Add a checkbutton to this menu.
@@ -6046,8 +6045,8 @@ class MenubarMetadata:
         self,
         label: str,
         pref_key: PrefKey,
-        command_on: Optional[Callable] = None,
-        command_off: Optional[Callable] = None,
+        command_on: Callable | None = None,
+        command_off: Callable | None = None,
         shortcut: str = "",
     ) -> None:
         """Add a command button to the list of orphans.
@@ -6123,7 +6122,7 @@ class MenubarMetadata:
                     command.shortcut = shortcut
                     break
 
-    def metadata_from_shortcut(self, shortcut: str) -> Optional[EntryMetadata]:
+    def metadata_from_shortcut(self, shortcut: str) -> EntryMetadata | None:
         """Return metadata that has given shortcut assigned (or None)."""
         if not shortcut:
             return None
@@ -6154,7 +6153,7 @@ class TearOffMenuDialog(ToplevelDialog):
     def __init__(self, title: str, menu_metadata: MenuMetadata) -> None:
         super().__init__(f"{title} Menu", resize_x=False, resize_y=False)
 
-        self._submenu: Optional[Menu] = None
+        self._submenu: Menu | None = None
 
         bg = themed_style().lookup("TFrame", "background")
         themed_style().configure(

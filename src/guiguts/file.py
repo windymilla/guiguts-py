@@ -5,9 +5,10 @@ import json
 import logging
 import os.path
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import messagebox
-from typing import Any, Callable, Final, Literal, Optional
+from typing import Any, Final, Literal
 
 import regex as re
 
@@ -118,7 +119,7 @@ class File:
         self.charsuites = {"Basic Latin": True}
         self.page_details = PageDetails()
         self.project_dict = ProjectDict()
-        self.mainwindow: Optional[MainWindow] = None
+        self.mainwindow: MainWindow | None = None
         self.autosave_id = ""
 
     @property
@@ -465,11 +466,11 @@ class File:
         if filename:
             insert_point = maintext().get_insert_index().index()
             try:
-                with open(filename, "r", encoding="utf-8") as fh:
+                with open(filename, encoding="utf-8") as fh:
                     maintext().insert(insert_point, maintext().reverse_rtl(fh.read()))
             except UnicodeDecodeError:
                 logger.warning("Unable to open as UTF-8, so opened as ISO-8859-1.")
-                with open(filename, "r", encoding="iso-8859-1") as fh:
+                with open(filename, encoding="iso-8859-1") as fh:
                     maintext().insert(insert_point, fh.read())
         grab_focus(root(), maintext())
 
@@ -565,11 +566,11 @@ class File:
         self.languages = bin_dict.get(BINFILE_KEY_LANGUAGES, "")
         if charsuites := bin_dict.get(BINFILE_KEY_CHARSUITES):
             self.charsuites = charsuites
-        bookmarks: Optional[dict[str, str]]
+        bookmarks: dict[str, str] | None
         if bookmarks := bin_dict.get(BINFILE_KEY_BOOKMARKS):
             for key, value in bookmarks.items():
                 self.set_bookmark_index(key, value)
-        image_rotations: Optional[dict[str, int]]
+        image_rotations: dict[str, int] | None
         if image_rotations := bin_dict.get(BINFILE_KEY_IMAGEROTATE):
             mainimage().rotation_details = image_rotations
 
@@ -742,7 +743,7 @@ class File:
         ):
             self.choose_image_dir(os.path.dirname(self.filename))
 
-    def choose_image_dir(self, initialdir: Optional[str] = None) -> None:
+    def choose_image_dir(self, initialdir: str | None = None) -> None:
         """Allow user to select directory containing png image files"""
         self.image_dir = FileDialog.askdirectory(
             initialdir=initialdir,
@@ -805,7 +806,7 @@ class File:
             image_num = re.sub(r"\.png$", "", image_num)
             self.do_goto_image(image_num)
 
-    def do_goto_image(self, image_num: Optional[str]) -> None:
+    def do_goto_image(self, image_num: str | None) -> None:
         """Go to page corresponding to the given image number.
 
         Args:
@@ -1231,7 +1232,7 @@ def bin_name(basename: str) -> str:
 _THE_FILE = None
 
 
-def the_file(file: Optional[File] = None) -> File:
+def the_file(file: File | None = None) -> File:
     """Store and return the single File widget"""
     global _THE_FILE
     if file is not None:

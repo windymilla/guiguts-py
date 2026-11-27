@@ -6,9 +6,10 @@ import operator
 import tkinter as tk
 import unicodedata
 import webbrowser
+from collections.abc import Callable
 from enum import Enum, StrEnum, auto
 from tkinter import messagebox, ttk
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, TypeVar
 
 import regex as re
 
@@ -591,7 +592,7 @@ class PageSeparatorDialog(ToplevelDialog):
         maintext().do_select(sep_range)
         maintext().set_insert_index(sep_range.start, focus=False)
 
-    def find(self, start: str = "1.0") -> Optional[IndexRange]:
+    def find(self, start: str = "1.0") -> IndexRange | None:
         """Find the first available separator line from start.
 
         Args:
@@ -702,7 +703,7 @@ class PageSeparatorDialog(ToplevelDialog):
             return
 
         # Auto-fix: Loop through page separators, fixing them if possible
-        sep_range: Optional[IndexRange] = maintext().start_to_end()
+        sep_range: IndexRange | None = maintext().start_to_end()
         while True:
             if sep_range is not None:
                 sep_range = self.find(sep_range.start.index())
@@ -1057,11 +1058,11 @@ def unmatched_markup_check(
     rerun_command: Callable[[], None],
     match_reg: str,
     match_pair_func: Callable[[str], tuple[str, bool]],
-    nest_reg: Optional[str] = None,
-    ignore_reg: Optional[str] = None,
-    sort_key_alpha: Optional[Callable[[CheckerEntry], tuple]] = None,
-    additional_check_command: Optional[Callable[[UnmatchedCheckerDialog], None]] = None,
-    equiv_func: Optional[Callable[[str, str], bool]] = None,
+    nest_reg: str | None = None,
+    ignore_reg: str | None = None,
+    sort_key_alpha: Callable[[CheckerEntry], tuple] | None = None,
+    additional_check_command: Callable[[UnmatchedCheckerDialog], None] | None = None,
+    equiv_func: Callable[[str, str], bool] | None = None,
     within_para: bool = False,
 ) -> None:
     """Check the currently loaded file for unmatched markup errors.
@@ -1163,8 +1164,8 @@ def find_match_pair(
     reverse: bool,
     nestable: bool,
     restrict_within_para: bool,
-    ignore_func: Optional[Callable[[str], bool]] = None,
-    equiv_func: Optional[Callable[[str, str], bool]] = None,
+    ignore_func: Callable[[str], bool] | None = None,
+    equiv_func: Callable[[str, str], bool] | None = None,
 ) -> str:
     """Find the pair to the given match.
 
@@ -1928,7 +1929,7 @@ class ScannoRegexCheckerDialog(CheckerDialog):
         self.scanno_number = 0
         self.prev_next_scanno(None)
 
-    def prev_next_scanno(self, prev: Optional[bool]) -> None:
+    def prev_next_scanno(self, prev: bool | None) -> None:
         """Display previous/next scanno & list of results.
 
         Auto-advances until it finds a scanno that has some results.
@@ -2194,8 +2195,8 @@ class RegexCheckerDialog(ScannoRegexCheckerDialog):
         )
 
 
-_THE_STEALTH_SCANNOS_DIALOG: Optional[ScannoCheckerDialog] = None
-_THE_REGEX_LIBRARY_DIALOG: Optional[RegexCheckerDialog] = None
+_THE_STEALTH_SCANNOS_DIALOG: ScannoCheckerDialog | None = None
+_THE_REGEX_LIBRARY_DIALOG: RegexCheckerDialog | None = None
 
 
 def do_replace_scanno_regex(dlg_type: str, checker_entry: CheckerEntry) -> None:
@@ -2833,7 +2834,7 @@ class CurlyQuotesDialog(CheckerDialog):
             _THE_CURLY_QUOTES_DIALOG.select_entry_by_index(cur_idx)
 
 
-_THE_CURLY_QUOTES_DIALOG: Optional[CurlyQuotesDialog] = None
+_THE_CURLY_QUOTES_DIALOG: CurlyQuotesDialog | None = None
 
 
 def do_fix_quote(checker_entry: CheckerEntry) -> None:

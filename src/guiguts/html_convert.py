@@ -6,7 +6,6 @@ import tkinter as tk
 from enum import StrEnum, auto
 from pathlib import Path
 from tkinter import messagebox, ttk
-from typing import Optional
 
 import regex as re
 
@@ -33,7 +32,7 @@ from guiguts.widgets import Busy, ToplevelDialog
 logger = logging.getLogger(__package__)
 
 css_indents: set[int] = set()
-BOOK_TITLE: Optional[str] = None
+BOOK_TITLE: str | None = None
 DEFAULT_HTML_DIR = importlib.resources.files(html)
 HTML_HEADER_NAME = "html_header.txt"
 PAGE_ID_PREFIX = "Page_"

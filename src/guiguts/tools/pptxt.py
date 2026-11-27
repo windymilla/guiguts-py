@@ -1,8 +1,9 @@
 """PPtxt tool"""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
 from tkinter import ttk
-from typing import Any, Dict, List, Sequence
+from typing import Any
 
 import regex as re
 
@@ -726,10 +727,10 @@ def weird_characters_check() -> None:
     first_header = True
     none_found = True
 
-    weirdos_lines_dictionary: Dict[str, list[int]] = {}
-    weirdos_counts_dictionary: Dict[str, int] = {}
+    weirdos_lines_dictionary: dict[str, list[int]] = {}
+    weirdos_counts_dictionary: dict[str, int] = {}
     # List of chars that are not weird for common languages
-    weirdos_not_language: Dict[str, str] = {
+    weirdos_not_language: dict[str, str] = {
         "de": "äöüÄÖÜß",
         "es": "áéíóúüñÁÉÍÓÚÜÑ",
         "fr": "àâæçéèêëîïôœùûüÿÀÂÆÇÉÈÊËÎÏÔŒÙÛÜŸ",
@@ -958,7 +959,7 @@ def specials_check(project_dict: ProjectDict) -> None:
                     )
                 )
 
-    specials_report: Dict[str, list[MsgInfo]] = {}
+    specials_report: dict[str, list[MsgInfo]] = {}
 
     ####
     # The following series of checks operate on text of each line.
@@ -972,7 +973,7 @@ def specials_check(project_dict: ProjectDict) -> None:
     for line_index, line in enumerate(book):
         if non_text_line(line):
             continue
-        exceptions: List[str] = []
+        exceptions: list[str] = []
         # Allow Illustrations, Greek, Music or number in '[]'
         heading = "Opening square bracket followed by other than I, G, M, S or digit."
         exceptions.append(r"\[Blank Page\]")
@@ -2246,7 +2247,7 @@ def scanno_check() -> None:
     )
 
     scanno_dictionary = build_scanno_dictionary()
-    scanno_outrecs: Dict[str, list[tuple]] = {}
+    scanno_outrecs: dict[str, list[tuple]] = {}
     no_scannos_found = True
 
     for line_index, line in enumerate(book):
@@ -2342,7 +2343,7 @@ def scanno_check() -> None:
 ######################################################################
 
 
-def build_scanno_dictionary() -> Dict[str, int]:
+def build_scanno_dictionary() -> dict[str, int]:
     """Builds a dictionary from a list of common misspelled words."""
 
     # List of common scannos. Add additions to end of the list.

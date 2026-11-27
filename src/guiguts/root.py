@@ -9,7 +9,7 @@ from enum import StrEnum, auto
 from functools import cache
 from tkinter import ttk
 from types import TracebackType
-from typing import Any, Optional
+from typing import Any
 
 from ttkthemes import ThemedTk
 
@@ -253,7 +253,7 @@ def install_macos_hide_workaround(window: tk.Misc) -> None:
     if not is_mac() or tk.TkVersion < 9.0:
         return
     stack: list[int] = []  # Front to back
-    key_window: Optional[int] = None
+    key_window: int | None = None
 
     def record_stack() -> None:
         if not _objc_send(ctypes.c_bool, _ns_app(), "isHidden"):

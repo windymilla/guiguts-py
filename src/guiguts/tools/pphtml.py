@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from html.parser import HTMLParser
 from textwrap import wrap
 from tkinter import ttk
-from typing import Any, Optional
+from typing import Any
 
 import regex as re
 from PIL import Image
@@ -51,7 +51,7 @@ class PPhtmlFileData:
 
     width: int
     height: int
-    format: Optional[str]
+    format: str | None
     mode: str
     filesize: int
 
@@ -77,8 +77,8 @@ class PPhtmlChecker:
         self.file_lines: list[str] = []  # Text split into lines
         self.links: dict[str, list[IndexRange]] = {}
         self.targets: dict[str, list[IndexRange]] = {}
-        self.used_classes: dict[str, Optional[IndexRange]] = {}
-        self.defined_classes: dict[str, Optional[IndexRange]] = {}
+        self.used_classes: dict[str, IndexRange | None] = {}
+        self.defined_classes: dict[str, IndexRange | None] = {}
 
     def reset(self) -> None:
         """Reset PPhtml checker."""
@@ -175,14 +175,14 @@ class PPhtmlChecker:
                             im.mode,
                             fsize,
                         )
-                except IOError:
+                except OSError:
                     errors.append(
                         f"  File '{filename}' is not valid {'PNG' if extension == '.png' else 'JPG'} format"
                     )
                     test_passed = False
                     continue
             elif extension == ".svg":
-                with open(filepath, "r", encoding="utf-8") as file:
+                with open(filepath, encoding="utf-8") as file:
                     file_contents = file.read()
                 # Check start of file is compatible with it being SVG format
                 if re.match(
@@ -494,7 +494,7 @@ class PPhtmlChecker:
 
     def external_links(self) -> None:
         """Report any external href links."""
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         test_passed = True
         count_links = 0
         for line_num, line in enumerate(self.file_lines):
@@ -607,7 +607,7 @@ class PPhtmlChecker:
         parser.feed(self.file_text)
         self.targets = parser.ids
 
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         test_passed = True
         for tgt, idx_ranges in self.targets.items():
             if len(idx_ranges) > 1:
@@ -622,7 +622,7 @@ class PPhtmlChecker:
 
     def link_counts(self) -> None:
         """Check for multiple links to the same ID, and report number of image links."""
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         test_passed = True
         num_reused = 0
         for tgt, idx_ranges in self.links.items():
@@ -662,7 +662,7 @@ class PPhtmlChecker:
         """Every link must go to one link target that exists (or flag missing link target).
         Every target should come from one or more links (or flag unused target)
         """
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         test_passed = True
         for alink, idx_ranges in self.links.items():
             if alink not in self.targets:
@@ -744,7 +744,7 @@ class PPhtmlChecker:
         if title_cnt != 1 or h1_cnt != 1:
             return
 
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         title_str = re.sub(r"\s+", " ", title_str).strip()
         h1_str = re.sub(r"&nbsp;", " ", h1_str)
         h1_str = re.sub(r"<br.*?>", " ", h1_str)
@@ -793,7 +793,7 @@ class PPhtmlChecker:
 
     def pre_tags(self) -> None:
         """Check no pre tags in HTML."""
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         count = 0
         for line_num, line in enumerate(self.file_lines):
             if match := re.search("<pre( .+?)?>", line):
@@ -860,7 +860,7 @@ class PPhtmlChecker:
                 super().__init__()
                 self.alts: list[tuple[str | None, IndexRange]] = []
                 self.tag_start = IndexRowCol(0, 0)
-                self.alt: Optional[str] = None
+                self.alt: str | None = None
 
             def handle_starttag(
                 self, tag: str, attrs: list[tuple[str, str | None]]
@@ -891,7 +891,7 @@ class PPhtmlChecker:
 
         parser = AltTagHTMLParser()
         parser.feed(self.file_text)
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         alt_is_missing = 0
         alt_is_empty = 0
         alt_is_blank = 0
@@ -908,7 +908,7 @@ class PPhtmlChecker:
             else:
                 alt_is_text += 1
         test_passed = alt_is_missing == 0 and alt_is_blank == 0
-        summary: list[tuple[str, Optional[IndexRange]]] = []
+        summary: list[tuple[str, IndexRange | None]] = []
         sum_missing_text = "" if alt_is_missing == 0 else " (ERROR)"
         sum_blank_text = "" if alt_is_missing == 0 else " (ERROR)"
         summary.append(
@@ -941,7 +941,7 @@ class PPhtmlChecker:
                 self.tag = ""
                 self.showh = False
                 self.tag_start = IndexRowCol(0, 0)
-                self.title: Optional[str] = None
+                self.title: str | None = None
 
             def handle_starttag(
                 self, tag: str, attrs: list[tuple[str, str | None]]
@@ -1047,7 +1047,7 @@ class PPhtmlChecker:
             def __init__(self) -> None:
                 """Initialize HTML outline parser."""
                 super().__init__()
-                self.classes: dict[str, Optional[IndexRange]] = {}
+                self.classes: dict[str, IndexRange | None] = {}
                 self.tag_start = IndexRowCol(0, 0)
 
             def handle_starttag(
@@ -1152,7 +1152,7 @@ class PPhtmlChecker:
                         a_class[1:]
                     )
 
-    def find_defined_class(self, css_class: str) -> Optional[IndexRange]:
+    def find_defined_class(self, css_class: str) -> IndexRange | None:
         """Return index range of first occurrence of css_class in file."""
         esc_class = re.escape(css_class)
         if idx := maintext().search(
@@ -1186,7 +1186,7 @@ class PPhtmlChecker:
         )
 
         def class_sort_key(
-            item: tuple[str, Optional[IndexRange]],
+            item: tuple[str, IndexRange | None],
         ) -> tuple[bool, IndexRowCol | str | None]:
             cls, loc = item
             # Sort known locations first, then by location, then by class name
@@ -1270,9 +1270,9 @@ class PPhtmlChecker:
 
     def misc_specials(self) -> None:
         """Check for markup etc. that has not been fully processed."""
-        errors: list[tuple[str, Optional[IndexRange]]] = []
+        errors: list[tuple[str, IndexRange | None]] = []
         for line_num, line in enumerate(self.file_lines):
-            match: Optional[re.Match[str]]
+            match: re.Match[str] | None
             if match := re.search(r"\[Illustration", line):
                 errors.append(
                     ("Unconverted illustration", self.idx_range(line_num, match))
@@ -1383,9 +1383,9 @@ class PPhtmlChecker:
 
     def output_subsection_errors(
         self,
-        test_passed: Optional[bool],
+        test_passed: bool | None,
         title: str,
-        errors: list[str] | list[tuple[str, Optional[IndexRange]]],
+        errors: list[str] | list[tuple[str, IndexRange | None]],
         fail_string: str = "",
     ) -> None:
         """Output collected errors underneath subsection title.

@@ -3,9 +3,10 @@
 import logging
 import math
 import tkinter as tk
+from collections.abc import Callable
 from enum import Enum, IntEnum, StrEnum, auto
 from tkinter import messagebox, ttk
-from typing import Any, Callable, Optional
+from typing import Any
 
 import regex as re
 
@@ -69,9 +70,9 @@ class CheckerEntry:
     def __init__(
         self,
         text: str,
-        text_range: Optional[IndexRange],
-        hilite_start: Optional[int],
-        hilite_end: Optional[int],
+        text_range: IndexRange | None,
+        hilite_start: int | None,
+        hilite_end: int | None,
         section: int,
         initial_pos: int,
         entry_type: CheckerEntryType,
@@ -103,7 +104,7 @@ class CheckerEntry:
         self.error_prefix = error_prefix
         assert ep_index in range(3)
         self.ep_index = ep_index
-        self.custom_data: Optional[Any] = None
+        self.custom_data: Any | None = None
 
     def error_prefix_tag(self) -> HighlightTag:
         """Return which tag to use to highlight error prefix."""
@@ -277,23 +278,23 @@ class CheckerDialog(ToplevelDialog):
     # 2. Flag should be persistent across different instances of dialog, since
     #    some dialogs are deleted & recreated
     # Therefore store as a dict class variable keyed on class name
-    selection_on_clear: dict[str, Optional[int]] = {}
+    selection_on_clear: dict[str, int | None] = {}
 
     def __init__(
         self,
         title: str,
         rerun_command: Callable[[], None],
         tooltip: str,
-        process_command: Optional[Callable[[CheckerEntry], None]] = None,
-        sort_key_rowcol: Optional[Callable[[CheckerEntry], tuple]] = None,
-        sort_key_alpha: Optional[Callable[[CheckerEntry], tuple]] = None,
-        sort_key_custom: Optional[Callable[[CheckerEntry], tuple]] = None,
+        process_command: Callable[[CheckerEntry], None] | None = None,
+        sort_key_rowcol: Callable[[CheckerEntry], tuple] | None = None,
+        sort_key_alpha: Callable[[CheckerEntry], tuple] | None = None,
+        sort_key_custom: Callable[[CheckerEntry], tuple] | None = None,
         sort_custom_label: str = "",
         show_suspects_only: bool = False,
         clear_on_undo_redo: bool = False,
-        view_options_dialog_class: Optional[type[CheckerViewOptionsDialog]] = None,
-        view_options_filters: Optional[list[CheckerFilter]] = None,
-        switch_focus_when_clicked: Optional[bool] = None,
+        view_options_dialog_class: type[CheckerViewOptionsDialog] | None = None,
+        view_options_filters: list[CheckerFilter] | None = None,
+        switch_focus_when_clicked: bool | None = None,
         show_hide_buttons: bool = True,
         show_process_buttons: bool = True,
         show_all_buttons: bool = True,
@@ -345,7 +346,7 @@ class CheckerDialog(ToplevelDialog):
         self.count_label = ttk.Label(self.count_header_frame, text="No results")
         self.count_label.grid(row=0, column=0, sticky="NSW")
 
-        self.suspects_only_btn: Optional[ttk.Checkbutton]
+        self.suspects_only_btn: ttk.Checkbutton | None
         if show_suspects_only:
             # Can't use a PersistentBoolean directly, since we save this value for each checker dialog
             self.suspects_only_var = tk.BooleanVar(
@@ -559,7 +560,7 @@ class CheckerDialog(ToplevelDialog):
             command=lambda: self.select_entry_by_arrow(1),
         ).grid(row=0, column=2, sticky="NS")
 
-        self.view_options_dialog: Optional[CheckerViewOptionsDialog] = None
+        self.view_options_dialog: CheckerViewOptionsDialog | None = None
 
         def show_view_options() -> None:
             """Show the view options dialog."""
@@ -709,7 +710,7 @@ class CheckerDialog(ToplevelDialog):
         self.count_suspects = 0
         self.section_count = 0
         self.selected_text = ""
-        self.selected_text_range: Optional[IndexRange] = None
+        self.selected_text_range: IndexRange | None = None
         self.reverse_mark_gravities = reverse_mark_gravities
         self.reset()
         self.update_count_label(working=True)
@@ -1051,7 +1052,7 @@ class CheckerDialog(ToplevelDialog):
         self,
         hf_type: CheckerEntryType,
         *headfoot_lines: str,
-        section: Optional[int] = None,
+        section: int | None = None,
     ) -> None:
         """Internal method to add header or footer to dialog.
 
@@ -1068,7 +1069,7 @@ class CheckerDialog(ToplevelDialog):
         if section is None:
             self.new_section()
 
-    def add_header(self, *header_lines: str, section: Optional[int] = None) -> None:
+    def add_header(self, *header_lines: str, section: int | None = None) -> None:
         """Add header to dialog.
 
         Args:
@@ -1076,7 +1077,7 @@ class CheckerDialog(ToplevelDialog):
         """
         self._add_headfoot(CheckerEntryType.HEADER, *header_lines, section=section)
 
-    def add_footer(self, *footer_lines: str, section: Optional[int] = None) -> None:
+    def add_footer(self, *footer_lines: str, section: int | None = None) -> None:
         """Add footer to dialog.
 
         Args:
@@ -1087,14 +1088,14 @@ class CheckerDialog(ToplevelDialog):
     def add_entry(
         self,
         msg: str,
-        text_range: Optional[IndexRange] = None,
-        hilite_start: Optional[int] = None,
-        hilite_end: Optional[int] = None,
+        text_range: IndexRange | None = None,
+        hilite_start: int | None = None,
+        hilite_end: int | None = None,
         entry_type: CheckerEntryType = CheckerEntryType.CONTENT,
         error_prefix: str = "",
         ep_index: int = 0,
-        severity: Optional[CheckerEntrySeverity] = None,
-        section: Optional[int] = None,
+        severity: CheckerEntrySeverity | None = None,
+        section: int | None = None,
     ) -> None:
         """Add an entry ready to be displayed in the dialog.
 
@@ -1704,7 +1705,7 @@ class CheckerDialog(ToplevelDialog):
             process=True, remove=True, all_matching=all_matching
         )
 
-    def current_entry_index(self) -> Optional[int]:
+    def current_entry_index(self) -> int | None:
         """Get the index entry of the currently selected error message.
 
         Returns:

@@ -8,10 +8,11 @@ import sys
 import tkinter as tk
 import unicodedata
 import webbrowser
+from collections.abc import Callable
 from datetime import date
 from importlib.metadata import version
 from tkinter import colorchooser, font, messagebox, ttk
-from typing import Callable, Literal, Optional
+from typing import Literal
 
 import regex as re
 from packaging.version import Version
@@ -1715,7 +1716,7 @@ class ComposeHelpDialog(ToplevelDialog):
                 anchor=tk.W,
             )
 
-    def process_click(self, event: Optional[tk.Event]) -> None:
+    def process_click(self, event: tk.Event | None) -> None:
         """Insert character corresponding to row clicked or change sort order
 
         Args:
@@ -2018,7 +2019,7 @@ class CommandPaletteDialog(ToplevelDialog):
     manual_page = "Help_Menu#Command_Palette"
     NUM_HISTORY = 5
     SEPARATOR_TAG = "separator"
-    recreate_menus_callback: Optional[Callable] = None
+    recreate_menus_callback: Callable | None = None
 
     def __init__(self) -> None:
         """Initialize the command palette window."""
@@ -2026,7 +2027,7 @@ class CommandPaletteDialog(ToplevelDialog):
         self.commands = menubar_metadata().get_all_palette_commands()
         self.filtered_entries: list[RecentPlusEntry] = []
         self.num_recent = 0
-        self.edit_dialog: Optional[CommandEditDialog] = None
+        self.edit_dialog: CommandEditDialog | None = None
 
         self.top_frame.grid_rowconfigure(0, weight=0)
         self.top_frame.grid_rowconfigure(1, weight=1)
@@ -2263,7 +2264,7 @@ class CommandPaletteDialog(ToplevelDialog):
         self.edit_dialog = CommandEditDialog.show_dialog(command_dlg=self)
         self.edit_dialog.load(entry)
 
-    def execute_command(self, event: Optional[tk.Event] = None) -> None:
+    def execute_command(self, event: tk.Event | None = None) -> None:
         """Execute the selected command."""
         # Ignore if modifier key used: Shift, Ctrl, Cmd, Alt (platform-specific)
         bad_modifiers = 0x0001 | 0x0004 | 0x0008 | 0x0080 | 0x20000
@@ -2280,7 +2281,7 @@ class CommandPaletteDialog(ToplevelDialog):
         self.destroy()
         command()
 
-    def get_selected_entry(self) -> Optional[EntryMetadata]:
+    def get_selected_entry(self) -> EntryMetadata | None:
         """Return EntryMetadata associated with selected entry in list (or None)."""
         selection = self.list.selection()
         if not selection:

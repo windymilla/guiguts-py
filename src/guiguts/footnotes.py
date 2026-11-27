@@ -84,7 +84,7 @@ class FootnoteRecord:
         end: IndexRowCol,
         hilite_start: int,
         hilite_end: int,
-        an_index: Optional[int],
+        an_index: int | None,
     ) -> None:
         """Initialize FootnoteRecord.
 
@@ -111,7 +111,7 @@ class FootnoteChecker:
         """Initialize footnote checker."""
         self.fn_records: list[FootnoteRecord] = []
         self.an_records: list[list[AnchorRecord]] = []
-        self.checker_dialog: "FootnoteCheckerDialog" = checker_dialog
+        self.checker_dialog: FootnoteCheckerDialog = checker_dialog
         self.fn_check_errors = False
         self.fns_have_been_moved = False
 

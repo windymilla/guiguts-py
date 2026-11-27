@@ -3,9 +3,10 @@
 import os.path
 import tkinter as tk
 import webbrowser
+from collections.abc import Callable
 from tkinter import filedialog, ttk
 from tkinter import font as tk_font
-from typing import Any, Callable, Optional, TypeVar
+from typing import Any, TypeVar
 
 import darkdetect  # type: ignore[import-untyped]
 import regex as re
@@ -21,8 +22,8 @@ from guiguts.utilities import cmd_ctrl_string, is_mac, is_windows, is_x11, proce
 
 NUM_HISTORY = 10
 GLOBAL_FONT_NAME = "global_font"
-GLOBAL_FONT: Optional[tk_font.Font] = None
-DEFAULT_FONT: Optional[tk_font.Font] = None
+GLOBAL_FONT: tk_font.Font | None = None
+DEFAULT_FONT: tk_font.Font | None = None
 
 
 TlDlg = TypeVar("TlDlg", bound="ToplevelDialog")
@@ -43,11 +44,11 @@ class ToplevelDialog(tk.Toplevel):
     toplevel_dialogs: dict[str, "ToplevelDialog"] = {}
 
     # Most recently focused dialog - must check it still exists before using it
-    recent_dialog: Optional[tk.Toplevel] = None
+    recent_dialog: tk.Toplevel | None = None
 
     # Location of manual page for most recently focused dialog
     context_help = ""
-    manual_page: Optional[str] = None
+    manual_page: str | None = None
 
     def __init__(
         self,
@@ -159,7 +160,7 @@ class ToplevelDialog(tk.Toplevel):
         return dlg
 
     @classmethod
-    def get_dialog(cls) -> Optional[TlDlg]:
+    def get_dialog(cls) -> TlDlg | None:
         """Return the one occurrence of this dialog class if it exists.
 
         Returns:
@@ -692,11 +693,11 @@ class Notebook(ttk.Notebook):
         if is_mac():
             self.toplevel.bind(
                 "<Command-Option-Left>",
-                lambda _: self.select_tab((self.index(tk.CURRENT) - 1)),
+                lambda _: self.select_tab(self.index(tk.CURRENT) - 1),
             )
             self.toplevel.bind(
                 "<Command-Option-Right>",
-                lambda _: self.select_tab((self.index(tk.CURRENT) + 1)),
+                lambda _: self.select_tab(self.index(tk.CURRENT) + 1),
             )
 
     def add(self, child: tk.Widget, *args: Any, **kwargs: Any) -> None:
@@ -730,7 +731,7 @@ class TreeviewList(ttk.Treeview):
     """Treeview to be used as a single-selection list."""
 
     def __init__(
-        self, parent: tk.Widget, sort_pref: Optional[PrefKey] = None, **kwargs: Any
+        self, parent: tk.Widget, sort_pref: PrefKey | None = None, **kwargs: Any
     ) -> None:
         """Initialize TreeviewList - standard ttk.Treeview in "browse" mode with extra bindings.
 
@@ -832,7 +833,7 @@ class TreeviewList(ttk.Treeview):
         col_id = self.identify_column(event.x)
         return row_id, col_id
 
-    def process_click(self, event: Optional[tk.Event]) -> Optional[str]:
+    def process_click(self, event: tk.Event | None) -> str | None:
         """Insert character corresponding to row clicked or change sort order
 
         Args:
@@ -862,7 +863,7 @@ class FileDialog:
     last directory used."""
 
     @staticmethod
-    def goodinitialdir(initialdir: Optional[str]) -> str:
+    def goodinitialdir(initialdir: str | None) -> str:
         """Return a good initialdir, using Pref, or its (grand)parent or home dir.
 
         Args:
@@ -884,10 +885,10 @@ class FileDialog:
         # Although docs say that `filetypes` can be `None`, actually get an exception
         # in Python 3.14.2, so default to `()` instead.
         filetypes: tuple[tuple[str, str], ...] = (),
-        initialdir: Optional[str] = None,
-        initialfile: Optional[str] = None,
-        parent: Optional[tk.Misc] = None,
-        title: Optional[str] = None,
+        initialdir: str | None = None,
+        initialfile: str | None = None,
+        parent: tk.Misc | None = None,
+        title: str | None = None,
     ) -> str:
         """Interface to tk.filedialog.askopenfilename with persistent initialdir."""
         initialdir = FileDialog.goodinitialdir(initialdir)
@@ -907,10 +908,10 @@ class FileDialog:
         # Although docs say that `filetypes` can be `None`, actually get an exception
         # in Python 3.14.2, so default to `()` instead.
         filetypes: tuple[tuple[str, str], ...] = (),
-        initialdir: Optional[str] = None,
-        initialfile: Optional[str] = None,
-        parent: Optional[tk.Misc] = None,
-        title: Optional[str] = None,
+        initialdir: str | None = None,
+        initialfile: str | None = None,
+        parent: tk.Misc | None = None,
+        title: str | None = None,
     ) -> str:
         """Interface to tk.filedialog.asksaveasfilename with persistent initialdir."""
         initialdir = FileDialog.goodinitialdir(initialdir)
@@ -927,10 +928,10 @@ class FileDialog:
 
     @staticmethod
     def askdirectory(
-        initialdir: Optional[str] = None,
-        mustexist: Optional[bool] = False,
-        parent: Optional[tk.Misc] = None,
-        title: Optional[str] = None,
+        initialdir: str | None = None,
+        mustexist: bool | None = False,
+        parent: tk.Misc | None = None,
+        title: str | None = None,
     ) -> str:
         """Interface to tk.filedialog.askdirectory with persistent initialdir."""
         initialdir = FileDialog.goodinitialdir(initialdir)
@@ -977,7 +978,7 @@ class ToolTip:
         self.inside = False
         self.msg = msg
         self.width = self.height = 0
-        self.tooltip_window: Optional[tk.Toplevel] = None
+        self.tooltip_window: tk.Toplevel | None = None
         self.enter_bind = self.widget.bind("<Enter>", self.on_enter, add="+")
         self.leave_bind = self.widget.bind("<Leave>", self.on_leave, add="+")
         self.press_bind = self.widget.bind("<ButtonRelease>", self.on_leave, add="+")
@@ -1106,7 +1107,7 @@ def unbind_from(widget: tk.Widget, sequence: str, func_id: str) -> None:
 
 def grab_focus(
     toplevel: tk.Toplevel | tk.Tk,
-    focus_widget: Optional[tk.Widget] = None,
+    focus_widget: tk.Widget | None = None,
     icon_deicon: bool = False,
 ) -> None:
     """Arcane calls to force window manager to put toplevel window
@@ -1174,7 +1175,7 @@ def handle_mouse_wheel(widget: tk.Widget, event: tk.Event, vertical: bool) -> No
 
 
 def bind_mouse_wheel(
-    bind_widget: tk.Widget, scroll_widget: Optional[tk.Widget] = None
+    bind_widget: tk.Widget, scroll_widget: tk.Widget | None = None
 ) -> None:
     """Bind wheel events when the cursor enters the control.
     Necessary to use bind_all to catch events on bind_widget's children,
@@ -1230,7 +1231,7 @@ _SINGLE_STYLE = None
 class ThemedStyle(ttk.Style):
     """Tk9-safe version of ttk.Style."""
 
-    def theme_use(self, themename: Optional[str] = None) -> Optional[str]:  # type: ignore[override]
+    def theme_use(self, themename: str | None = None) -> str | None:  # type: ignore[override]
         """Overridden, to avoid crash with Tk9.
 
         If themename is None, returns the theme in use, otherwise, set
@@ -1279,7 +1280,7 @@ class ThemedStyle(ttk.Style):
         return False
 
 
-def themed_style(style: Optional[ThemedStyle] = None) -> ThemedStyle:
+def themed_style(style: ThemedStyle | None = None) -> ThemedStyle:
     """Store and return the single Style object"""
     global _SINGLE_STYLE
     if style is not None:
@@ -1295,7 +1296,7 @@ def themed_style(style: Optional[ThemedStyle] = None) -> ThemedStyle:
 # in dialogs like Compose Sequence (which are used to create the special
 # characters).
 
-_TEXT_FOCUS_WIDGET: Optional[tk.Widget] = None
+_TEXT_FOCUS_WIDGET: tk.Widget | None = None
 
 
 def register_focus_widget(widget: ttk.Entry | tk.Text) -> None:
@@ -1388,7 +1389,7 @@ class Busy:
     """
 
     BUSY_DELAY = 500  # Suggested time delay before setting unbusy
-    _busy_widget: Optional[ttk.Label] = None
+    _busy_widget: ttk.Label | None = None
     _busy_widget_cursors: dict[tk.Widget | tk.Tk | tk.Toplevel, str] = {}
 
     @classmethod
@@ -1550,7 +1551,7 @@ class AskStringDialog(tk.Toplevel):
         self.transient(parent)  # type: ignore[arg-type]
         self.resizable(False, False)
 
-        self.result: Optional[str] = None
+        self.result: str | None = None
 
         frame = ttk.Frame(self, padding=10)
         frame.grid(sticky="nsew")
@@ -1612,17 +1613,13 @@ class AskStringDialog(tk.Toplevel):
         return proposed.isdigit() or proposed == ""
 
 
-def askstring(
-    parent: tk.Widget | tk.Toplevel, title: str, prompt: str
-) -> Optional[str]:
+def askstring(parent: tk.Widget | tk.Toplevel, title: str, prompt: str) -> str | None:
     """Show dialog to get string from user."""
     dialog = AskStringDialog(parent, title, prompt)
     return dialog.result
 
 
-def askinteger(
-    parent: tk.Widget | tk.Toplevel, title: str, prompt: str
-) -> Optional[int]:
+def askinteger(parent: tk.Widget | tk.Toplevel, title: str, prompt: str) -> int | None:
     """Show dialog to get integer from user."""
     dialog = AskStringDialog(parent, title, prompt, integer=True)
     if dialog.result is None:

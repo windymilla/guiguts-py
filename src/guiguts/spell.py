@@ -3,9 +3,10 @@
 import importlib.resources
 import logging
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import ttk
-from typing import Any, Callable, Optional
+from typing import Any, Optional
 
 import regex as re
 from rapidfuzz import process
@@ -645,7 +646,7 @@ def process_suggestion(checker_entry: CheckerEntry) -> None:
     end_mark = SpellCheckerDialog.mark_from_rowcol(checker_entry.text_range.end)
     word = re.sub(r" \(.+\)$", "", checker_entry.text)
     match_text = maintext().get(start_mark, end_mark)
-    dialog: Optional[SpellCheckerDialog] = SpellCheckerDialog.get_dialog()
+    dialog: SpellCheckerDialog | None = SpellCheckerDialog.get_dialog()
     assert dialog is not None
     replacement_text = dialog.suggestion_var.get()
     if word != match_text or replacement_text == dialog.no_suggestions:

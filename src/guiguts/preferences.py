@@ -6,8 +6,9 @@ import logging
 import os
 import time
 import tkinter as tk
+from collections.abc import Callable
 from enum import StrEnum, auto
-from typing import Any, Callable, Optional
+from typing import Any
 
 from guiguts.utilities import is_test, is_windows, is_x11, load_dict_from_json
 
@@ -479,7 +480,7 @@ class Preferences:
                 f"Unable to save preferences to GGPrefs file. Details:\n{str(exc)}"
             )
 
-    def load(self, prefs_basefile: Optional[str]) -> None:
+    def load(self, prefs_basefile: str | None) -> None:
         """Load dictionary from JSON file, and use PrefKeys
         to store values in preferences dictionary."""
         if is_x11():

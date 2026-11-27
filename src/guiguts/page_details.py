@@ -2,7 +2,7 @@
 
 import tkinter as tk
 from tkinter import ttk
-from typing import Any, Optional
+from typing import Any
 
 import roman  # type: ignore[import-untyped]
 
@@ -171,7 +171,7 @@ class PageDetailsDialog(OkApplyCancelDialog):
             lambda _: self.item_clicked(NUMBER_COLUMN, reverse=True),
         )
 
-        def display_page(_event: Optional[tk.Event] = None) -> None:
+        def display_page(_event: tk.Event | None = None) -> None:
             """Display the page for the selected row."""
             try:
                 png = self.list.set(self.list.focus())[COL_HEAD_IMG]

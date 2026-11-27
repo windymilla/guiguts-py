@@ -11,11 +11,12 @@ import tkinter as tk
 import webbrowser
 import xml.sax
 import zipfile
+from collections.abc import Callable
 from enum import StrEnum
 from html.parser import HTMLParser
 from pathlib import Path
 from tkinter import ttk
-from typing import Any, Callable, Optional
+from typing import Any
 
 import regex as re
 import requests
@@ -89,11 +90,11 @@ class HTMLImageBaseDialog(ToplevelDialog):
         """
         super().__init__(str(dlg_type))
 
-        self.image: Optional[Image.Image] = None
-        self.imagetk: Optional[ImageTk.PhotoImage] = None
+        self.image: Image.Image | None = None
+        self.imagetk: ImageTk.PhotoImage | None = None
         self.width = 0
         self.height = 0
-        self.illo_range: Optional[IndexRange] = None
+        self.illo_range: IndexRange | None = None
         self.mark_img_start = HTMLImageEditDialog.get_dlg_name() + "ImgStart"
         self.mark_img_end = HTMLImageEditDialog.get_dlg_name() + "ImgEnd"
         self.mark_alt_start = HTMLImageEditDialog.get_dlg_name() + "AltStart"
@@ -2720,7 +2721,7 @@ class HTMLMarkupDialog(ToplevelDialog):
 
     @classmethod
     def add_custom_markup(
-        cls, attr_key: PrefKey, markup: str, cbx: Optional[Combobox]
+        cls, attr_key: PrefKey, markup: str, cbx: Combobox | None
     ) -> None:
         """Add custom markup around selected text, or if none, just insert it.
 
@@ -2888,7 +2889,7 @@ class HTMLLinksDialog(ToplevelDialog):
             anchor_frame, text="Insert Anchor At Selection", command=self.insert_anchor
         ).grid(row=0, column=0)
 
-    def insert_ilink(self, event: Optional[tk.Event]) -> None:
+    def insert_ilink(self, event: tk.Event | None) -> None:
         """Insert internal link corresponding to row clicked.
 
         Args:
@@ -3050,7 +3051,7 @@ def latex_svg_convert() -> None:
         )
     # Check if anything in err_file, except "...Finished"
     try:
-        with open(err_file, "r", encoding="utf-8") as fh:
+        with open(err_file, encoding="utf-8") as fh:
             for line in fh:
                 if (
                     line == ""

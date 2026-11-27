@@ -8,11 +8,12 @@ import subprocess
 import time
 import tkinter as tk
 import urllib.parse
+from collections.abc import Callable
 from enum import Enum, auto
 from pathlib import Path
 from string import ascii_uppercase
 from tkinter import EventType, messagebox, ttk
-from typing import Any, Callable, Optional
+from typing import Any
 
 import regex as re
 from PIL import Image, ImageChops, ImageOps, ImageTk
@@ -68,7 +69,7 @@ class CustomMenuDialog(ToplevelDialog):
 
     manual_page = "Custom_Menu"
     filename = ""
-    recreate_menus_callback: Optional[Callable] = None
+    recreate_menus_callback: Callable | None = None
 
     def __init__(self, menu: MenuMetadata) -> None:
         """Initialize the Custom Menu dialog.
@@ -681,9 +682,9 @@ class MainImage(tk.Frame):
 
         self.image_scale = float(preferences.get(PrefKey.IMAGE_SCALE_FACTOR))
         self.scale_delta = 1.1
-        self.image: Optional[Image.Image] = None
+        self.image: Image.Image | None = None
         self.imageid = 0
-        self.imagetk: Optional[ImageTk.PhotoImage] = None
+        self.imagetk: ImageTk.PhotoImage | None = None
         self.filename = ""
         self.width = 0
         self.height = 0
@@ -912,9 +913,7 @@ class MainImage(tk.Frame):
         )
         self.canvas.configure(scrollregion=self.canvas.bbox(self.imageid))
 
-    def regrab_focus(
-        self, focus_widget: Optional[tk.Misc], remaining_period: int
-    ) -> None:
+    def regrab_focus(self, focus_widget: tk.Misc | None, remaining_period: int) -> None:
         """Grab focus back from external image viewer.
 
         Args:
@@ -974,7 +973,7 @@ class MainImage(tk.Frame):
         elif absx > absy:
             self.canvas.xview_scroll(-xscr, "units")
 
-    def load_image(self, filename: Optional[str] = None) -> bool:
+    def load_image(self, filename: str | None = None) -> bool:
         """Load or clear the given image file.
 
         Args:
@@ -1069,7 +1068,7 @@ class MainImage(tk.Frame):
             pass
         self.allow_geometry_storage = True
 
-    def handle_configure(self, evt: Optional[tk.Event]) -> None:
+    def handle_configure(self, evt: tk.Event | None) -> None:
         """Handle configure event."""
         if preferences.get(PrefKey.IMAGE_WINDOW_DOCKED):
             try:  # In case unlucky timing means it tries to configure during undocking & finds sash doesn't exist
@@ -1095,7 +1094,7 @@ class MainImage(tk.Frame):
             mainimage().alert_user()
         self.auto_image_state(AutoImageState.NORMAL)
 
-    def handle_leave(self, _event: Optional[tk.Event] = None) -> None:
+    def handle_leave(self, _event: tk.Event | None = None) -> None:
         """Handle leave event."""
         # Restart auto img
         if self.auto_image_state() == AutoImageState.PAUSED:
@@ -1115,9 +1114,7 @@ class MainImage(tk.Frame):
         set_canvas_highlight(4)
         self.after(500, lambda: set_canvas_highlight(0))
 
-    def auto_image_state(
-        self, value: Optional[AutoImageState] = None
-    ) -> AutoImageState:
+    def auto_image_state(self, value: AutoImageState | None = None) -> AutoImageState:
         """Set or query whether auto_image is paused or restarting."""
         if value is not None:
             self._auto_image_state = value
@@ -1242,14 +1239,14 @@ class StatusBar(ttk.Frame):
         """
         super().__init__(parent)
         self.fields: dict[str, ttk.Button] = {}
-        self.callbacks: dict[str, Optional[Callable[[], str]]] = {}
+        self.callbacks: dict[str, Callable[[], str] | None] = {}
         self._update()
 
     def add(
         self,
         key: str,
         tooltip: str = "",
-        update: Optional[Callable[[], str]] = None,
+        update: Callable[[], str] | None = None,
         **kwargs: Any,
     ) -> None:
         """Add field to status bar
@@ -1385,7 +1382,7 @@ class MessageLog(logging.Handler):
         """Initialize the message log handler."""
         super().__init__(*args)
         self._messagelog: str = ""
-        self.dialog: Optional[MessageLogDialog] = None
+        self.dialog: MessageLogDialog | None = None
         self.label_widget = label_widget
         self.label_fade_ids: list[str] = []  # Store so they can be canceled
 
@@ -1515,7 +1512,7 @@ class MainWindow:
         self.dark_photos: dict[str, ImageTk.PhotoImage] = {}
 
         def create_toolbar_btn(
-            col: int, name: str, tooltip: str, size: Optional[tuple[int, int]] = None
+            col: int, name: str, tooltip: str, size: tuple[int, int] | None = None
         ) -> None:
             """Create a toolbar button.
 

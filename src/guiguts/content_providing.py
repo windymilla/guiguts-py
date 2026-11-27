@@ -6,9 +6,10 @@ import logging
 import shutil
 import subprocess
 import tkinter as tk
+from collections.abc import Iterator
 from pathlib import Path
 from tkinter import ttk
-from typing import Any, Final, Iterator, Optional
+from typing import Any, Final
 
 import regex as re
 from PIL import Image, UnidentifiedImageError
@@ -56,7 +57,7 @@ HEAD_FOOT_CHECKER_FILTERS = [
 ]
 
 
-def check_prep_text_order(importing: bool) -> Optional[list[str]]:
+def check_prep_text_order(importing: bool) -> list[str] | None:
     """Check the prep text file order matches sort order, both
     case-sensitive and insensitive.
 
@@ -536,7 +537,7 @@ class HeadFootCheckerDialog(CheckerDialog):
         even_foot_btn.grid(row=0, column=3, padx=5)
         self.view_options_filters[3].on = True
         self.header_footer_list: list[tuple[int, str]] = []
-        self.saved_index: Optional[int] = 0
+        self.saved_index: int | None = 0
 
     def process_remove_entries(
         self, process: bool, remove: bool, all_matching: bool

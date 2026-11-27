@@ -1,8 +1,8 @@
 """Support functions for testing."""
 
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from guiguts.checkers import CheckerDialog
 from guiguts.file import the_file
@@ -13,7 +13,7 @@ def run_test(
     base_in: str,
     base_exp: str,
     run_func: Callable,
-    dialog_class: Optional[type[CheckerDialog]] = None,
+    dialog_class: type[CheckerDialog] | None = None,
 ) -> None:
     """Test a checker tool.
 

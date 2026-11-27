@@ -4,7 +4,7 @@
 # was based on https://sourceforge.net/projects/gutcheck
 
 import logging
-from typing import Any, Optional
+from typing import Any
 
 import regex as re
 import roman  # type: ignore[import-untyped]
@@ -177,7 +177,7 @@ class BookloupeChecker:
 
     def __init__(self) -> None:
         """Initialize BookloupeChecker class."""
-        self.dialog: Optional[BookloupeCheckerDialog] = None
+        self.dialog: BookloupeCheckerDialog | None = None
         self.hebe_regex = re.compile(
             r'(?i)(\b(be could|be would|be is|was be|is be|to he)|",? be)\b'
         )

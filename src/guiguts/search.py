@@ -3,9 +3,10 @@
 import logging
 import tkinter as tk
 import traceback
+from collections.abc import Callable
 from tkinter import font as tk_font
 from tkinter import ttk
-from typing import Any, Callable, Optional, Tuple
+from typing import Any
 
 import regex as re
 import roman  # type: ignore[import-untyped]
@@ -502,7 +503,7 @@ class SearchDialog(ToplevelDialog):
         geometry = re.sub(r"(\d+x)\d+(.+)", rf"\g<1>{height + offset}\g<2>", geometry)
         self.geometry(geometry)
 
-    def is_valid_regex(self, new_value: Optional[str] = None) -> bool:
+    def is_valid_regex(self, new_value: str | None = None) -> bool:
         """Validation routine for Search Combobox - check value is a valid regex.
 
         Note that it always returns True because we want user to be able to type
@@ -607,7 +608,7 @@ class SearchDialog(ToplevelDialog):
         )
         return "break"
 
-    def count_clicked(self) -> Optional[list[FindMatch]]:
+    def count_clicked(self) -> list[FindMatch] | None:
         """Count how many times search string occurs in file (or selection).
 
         Display count in Search dialog.
@@ -1161,7 +1162,7 @@ def get_search_start(backwards: bool) -> IndexRowCol:
 def strip_outer_lookarounds(pattern: str) -> str:
     """Remove leading/trailing lookahead/behind constructs from a regex pattern."""
 
-    def find_matching_paren(s: str, start: int) -> Optional[int]:
+    def find_matching_paren(s: str, start: int) -> int | None:
         """Find index of matching ')' for '(' at index start, considering nesting."""
         depth = 0
         for i in range(start, len(s)):
@@ -1329,7 +1330,7 @@ def get_regex_replacement(
     return replace_str
 
 
-def get_search_ranges() -> Tuple[Optional[list[IndexRange]], str]:
+def get_search_ranges() -> tuple[list[IndexRange] | None, str]:
     """Get ranges to search over, based on checkbox settings.
 
     Returns:

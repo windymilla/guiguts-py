@@ -6,9 +6,10 @@ import logging
 import tkinter as tk
 import unicodedata
 from collections import Counter
+from collections.abc import Callable
 from enum import StrEnum, auto
 from tkinter import ttk
-from typing import Any, Callable, Optional, cast
+from typing import Any, cast
 
 import regex as re
 
@@ -1494,7 +1495,7 @@ class WordFrequencyDialog(CheckerDialog):
     @classmethod
     def highlight_charsuite_refresh(cls) -> None:
         """Maybe redraw WF display due to charsuite highlight change."""
-        dlg: Optional[WordFrequencyDialog] = WordFrequencyDialog.get_dialog()
+        dlg: WordFrequencyDialog | None = WordFrequencyDialog.get_dialog()
         if dlg is None:
             return
         if preferences.get(PrefKey.WFDIALOG_SORT_TYPE) != WFDisplayType.CHAR_COUNTS:
