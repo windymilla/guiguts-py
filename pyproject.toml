@@ -76,12 +76,6 @@ src = ["src"]
 [tool.ruff.lint]
 ignore = ["E501"] # Rely on `ruff format` for line length
 select = ["E", "F", "W", "I", "UP"]
-extend-select = [
-#    "I",    # isort
-#    "UP",   # pyupgrade
-#    "B",    # bugbear
-#    "SIM",  # simplify
-]
 
 [build-system]
 requires = ["poetry-core"]
